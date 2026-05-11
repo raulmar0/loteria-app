@@ -35,6 +35,12 @@ export function App() {
   const [showHistory, setShowHistory] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const lastCallAtRef = useRef(0);
+  const pausedAtRef = useRef<number | null>(null);
+  const hasCalledRef = useRef(false);
+
+  useEffect(() => {
+    hasCalledRef.current = called.length > 0;
+  }, [called.length]);
 
   // Build the TTS string for a card based on current language + verses setting
   const buildText = useCallback(
@@ -70,15 +76,42 @@ export function App() {
     tickRef.current = tick;
   }, [tick]);
 
-  // Auto-mode: setInterval based on selected speed.
+  // Auto-mode: pause-aware timer.
+  // - First play (no cards yet): draw immediately, then setInterval.
+  // - Pause: capture pausedAt so the pause duration can later be subtracted
+  //   from the running clock; the current card stays unchanged.
+  // - Resume: shift lastCallAt forward by the pause duration so the countdown
+  //   continues from where it left off instead of restarting or skipping.
   useEffect(() => {
-    if (!running) return;
-    if (Date.now() - lastCallAtRef.current > 1000) {
-      tickRef.current();
+    if (!running) {
+      if (hasCalledRef.current && pausedAtRef.current === null) {
+        pausedAtRef.current = Date.now();
+      }
+      return;
     }
+
     const intervalMs = SPEEDS[tweaks.speed].seconds * 1000;
-    const id = window.setInterval(() => tickRef.current(), intervalMs);
-    return () => window.clearInterval(id);
+
+    if (!hasCalledRef.current) {
+      tickRef.current();
+    } else if (pausedAtRef.current !== null) {
+      lastCallAtRef.current += Date.now() - pausedAtRef.current;
+      pausedAtRef.current = null;
+    }
+
+    const elapsed = Date.now() - lastCallAtRef.current;
+    const remaining = Math.max(0, intervalMs - elapsed);
+
+    let intervalId: number | undefined;
+    const timeoutId = window.setTimeout(() => {
+      tickRef.current();
+      intervalId = window.setInterval(() => tickRef.current(), intervalMs);
+    }, remaining);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      if (intervalId !== undefined) window.clearInterval(intervalId);
+    };
   }, [running, tweaks.speed]);
 
   // Countdown bar 200ms re-render driver.
@@ -96,6 +129,7 @@ export function App() {
     if (deck.length === 0 && called.length > 0) {
       resetDeck();
       lastCallAtRef.current = 0;
+      pausedAtRef.current = null;
       return;
     }
     setRunning(r => !r);
@@ -104,6 +138,11 @@ export function App() {
   const handleNext = () => {
     if (deck.length === 0) return;
     tick();
+    // If we're paused, the just-drawn card resets the countdown — the pause
+    // duration before this click shouldn't count toward the new card's timer.
+    if (pausedAtRef.current !== null) {
+      pausedAtRef.current = Date.now();
+    }
   };
 
   const handleRepeat = () => {
