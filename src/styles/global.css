@@ -691,3 +691,43 @@ body {
   .confirm-backdrop { animation: none; }
   .countdown-fill { transition: none; }
 }
+
+/* ----- Network status indicator ----- */
+.network-status {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: transform 200ms ease, opacity 200ms ease;
+}
+
+.network-status[data-online="true"] {
+  transform: translateY(-100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.network-status[data-online="false"] {
+  transform: translateY(0);
+  opacity: 1;
+  background: #111;
+  color: #fff;
+}
+
+.network-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.8;
+}

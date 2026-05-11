@@ -8,6 +8,7 @@ import { CountersRow } from './components/CountersRow';
 import { HistorySheet } from './components/HistorySheet';
 import { HistoryToggle } from './components/HistoryToggle';
 import { PapelPicado } from './components/PapelPicado';
+import { OfflineIndicator } from './components/OfflineIndicator';
 import { PwaInstallBanner } from './components/PwaInstallBanner';
 import { SettingsSheet } from './components/SettingsSheet';
 import { FONTS } from './data/fonts';
@@ -355,6 +356,12 @@ export function App() {
       </div>
 
       <PapelPicado color={palette.bg} count={7} />
+
+      <OfflineIndicator
+        fonts={fonts}
+        offlineLabel={t('Sin conexión', 'Offline')}
+        onlineLabel={t('En línea', 'Online')}
+      />
 
       <AppHeader
         language={language}
