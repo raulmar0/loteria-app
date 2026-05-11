@@ -11,6 +11,9 @@ interface Props {
   setTweak: <K extends keyof Tweaks>(key: K, value: Tweaks[K]) => void;
   onResetDeck: () => void;
   canResetDeck: boolean;
+  canInstallPwa: boolean;
+  installingPwa: boolean;
+  onInstallPwa: () => void;
   palette: Palette;
   fonts: FontPair;
   ttsSupported: boolean;
@@ -24,6 +27,9 @@ interface Props {
     versesDesc: string;
     speed: string;
     language: string;
+    installApp: string;
+    installAppDesc: string;
+    installAppButton: string;
     resetDeck: string;
   };
 }
@@ -35,6 +41,9 @@ export function SettingsSheet({
   setTweak,
   onResetDeck,
   canResetDeck,
+  canInstallPwa,
+  installingPwa,
+  onInstallPwa,
   palette,
   fonts,
   ttsSupported,
@@ -107,6 +116,39 @@ export function SettingsSheet({
           fontBody={fonts.body}
         />
       </div>
+
+      {canInstallPwa && (
+        <div className="setting-row">
+          <div className="setting-info">
+            <div className="setting-label" style={{ fontFamily: fonts.head }}>{labels.installApp}</div>
+            <div className="setting-desc" style={{ fontFamily: fonts.body }}>{labels.installAppDesc}</div>
+          </div>
+          <button
+            type="button"
+            className="setting-action-btn"
+            onClick={onInstallPwa}
+            disabled={installingPwa}
+            style={{ fontFamily: fonts.head, backgroundColor: palette.accent }}
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M12 3v12" />
+              <path d="m7 10 5 5 5-5" />
+              <path d="M5 21h14" />
+            </svg>
+            {labels.installAppButton}
+          </button>
+        </div>
+      )}
 
       <button
         type="button"

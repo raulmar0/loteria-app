@@ -1,22 +1,28 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import type { PwaInstallOutcome } from '../lib/pwaInstall';
 import type { FontPair } from '../types';
 
 const DISMISSED_KEY = 'loteria:pwa-install-banner-dismissed';
-
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
-}
 
 interface Props {
   fonts: FontPair;
   message: string;
   installLabel: string;
   dismissLabel: string;
+  canInstall: boolean;
+  installing: boolean;
+  onInstall: () => Promise<PwaInstallOutcome>;
 }
 
-export function PwaInstallBanner({ fonts, message, installLabel, dismissLabel }: Props) {
-  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+export function PwaInstallBanner({
+  fonts,
+  message,
+  installLabel,
+  dismissLabel,
+  canInstall,
+  installing,
+  onInstall,
+}: Props) {
   const [dismissed, setDismissed] = useState(() => {
     try {
       return window.localStorage.getItem(DISMISSED_KEY) === 'true';
@@ -25,21 +31,8 @@ export function PwaInstallBanner({ fonts, message, installLabel, dismissLabel }:
     }
   });
 
-  useEffect(() => {
-    if (dismissed) return;
-
-    const handleBeforeInstallPrompt = (event: Event) => {
-      event.preventDefault();
-      setInstallPrompt(event as BeforeInstallPromptEvent);
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-  }, [dismissed]);
-
   const handleDismiss = () => {
     setDismissed(true);
-    setInstallPrompt(null);
     try {
       window.localStorage.setItem(DISMISSED_KEY, 'true');
     } catch {
@@ -48,18 +41,14 @@ export function PwaInstallBanner({ fonts, message, installLabel, dismissLabel }:
   };
 
   const handleInstall = async () => {
-    if (!installPrompt) return;
-
-    await installPrompt.prompt();
-    const { outcome } = await installPrompt.userChoice;
-    setInstallPrompt(null);
+    const outcome = await onInstall();
 
     if (outcome === 'accepted') {
       handleDismiss();
     }
   };
 
-  if (dismissed || !installPrompt) return null;
+  if (dismissed || !canInstall) return null;
 
   return (
     <section className="pwa-banner" aria-label={message}>
@@ -73,7 +62,13 @@ export function PwaInstallBanner({ fonts, message, installLabel, dismissLabel }:
       <p className="pwa-banner-message" style={{ fontFamily: fonts.body }}>
         {message}
       </p>
-      <button type="button" className="pwa-banner-install" onClick={handleInstall} style={{ fontFamily: fonts.head }}>
+      <button
+        type="button"
+        className="pwa-banner-install"
+        onClick={handleInstall}
+        disabled={installing}
+        style={{ fontFamily: fonts.head }}
+      >
         {installLabel}
       </button>
       <button type="button" className="pwa-banner-dismiss" onClick={handleDismiss} aria-label={dismissLabel}>

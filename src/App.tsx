@@ -15,6 +15,7 @@ import { FONTS } from './data/fonts';
 import { PALETTES } from './data/palettes';
 import { SPEEDS } from './data/speeds';
 import { useDeck } from './hooks/useDeck';
+import { usePwaInstallPrompt } from './hooks/usePwaInstallPrompt';
 import { useTTS } from './hooks/useTTS';
 import { useTweaks } from './hooks/useTweaks';
 import { makeT } from './lib/i18n';
@@ -35,6 +36,7 @@ export function App() {
     enabled: tweaks.voice,
     language,
   });
+  const { canInstall: canInstallPwa, installing: installingPwa, install: installPwa } = usePwaInstallPrompt();
 
   const [running, setRunning] = useState(false);
   const [timerNowMs, setTimerNowMs] = useState(() => performance.now());
@@ -378,6 +380,9 @@ export function App() {
         message={t('Se puede instalar como PWA', 'This app can be installed as a PWA')}
         installLabel={t('Instalar', 'Install')}
         dismissLabel={t('Descartar aviso de instalación', 'Dismiss install notice')}
+        canInstall={canInstallPwa}
+        installing={installingPwa}
+        onInstall={installPwa}
       />
 
       <main className="app-main" aria-label={t('Cantor de Lotería', 'Lotería Caller')}>
@@ -460,6 +465,9 @@ export function App() {
         setTweak={setTweak}
         onResetDeck={handleRequestRestart}
         canResetDeck={called.length > 0}
+        canInstallPwa={canInstallPwa}
+        installingPwa={installingPwa}
+        onInstallPwa={() => { void installPwa(); }}
         palette={palette}
         fonts={fonts}
         ttsSupported={ttsSupported}
@@ -479,6 +487,9 @@ export function App() {
           ),
           speed: t('Velocidad', 'Speed'),
           language: t('Idioma', 'Language'),
+          installApp: t('Instalar app', 'Install app'),
+          installAppDesc: t('(para uso offline)', '(for offline use)'),
+          installAppButton: t('Instalar', 'Install'),
           resetDeck: t('Reiniciar mazo', 'Reset deck'),
         }}
       />

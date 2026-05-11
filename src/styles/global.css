@@ -611,6 +611,38 @@ body {
 }
 .seg-sec { font-size: 10px; opacity: 0.6; margin-left: 4px; }
 
+.setting-action-btn {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 2px solid var(--ink);
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: white;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 var(--ink);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  font-family: inherit;
+}
+.setting-action-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0 0 0 var(--ink);
+}
+.setting-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.setting-action-btn:disabled:active {
+  transform: none;
+  box-shadow: 2px 2px 0 var(--ink);
+}
+
 .reset-btn {
   width: 100%;
   margin-top: 16px;

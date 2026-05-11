@@ -1,4 +1,5 @@
 import { LoteriaIcon } from './LoteriaIcon';
+import { chooseIconFill } from '../lib/colorContrast';
 import type { Card, FontPair, Language, Palette } from '../types';
 
 interface Props {
@@ -24,6 +25,7 @@ export function CardFace({ card, language, showVerse, palette, fonts, emptyLabel
 
   const name = language === 'es' ? card.es : card.en;
   const verse = language === 'es' ? card.verseEs : card.verseEn;
+  const iconColor = chooseIconFill(card.color, palette.paper, palette.ink);
 
   return (
     <div className="card-face" key={card.n}>
@@ -38,7 +40,7 @@ export function CardFace({ card, language, showVerse, palette, fonts, emptyLabel
 
         <div className="card-icon-wrap" style={{ background: `${card.color}15` }}>
           <div className="card-icon-bg" style={{ background: card.color }} />
-          <LoteriaIcon name={card.icon} color={palette.paper} accent={card.color} size={180} />
+          <LoteriaIcon name={card.icon} color={iconColor} accent={card.color} size={180} />
         </div>
 
         <div className="card-name" style={{ fontFamily: fonts.head, color: card.color }}>{name}</div>
