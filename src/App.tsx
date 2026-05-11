@@ -18,6 +18,8 @@ import { useTweaks } from './hooks/useTweaks';
 import { makeT } from './lib/i18n';
 import type { Card } from './types';
 
+const TIMER_REFRESH_MS = 100;
+
 export function App() {
   const { tweaks, setTweak } = useTweaks();
   const palette = PALETTES[tweaks.palette];
@@ -32,15 +34,14 @@ export function App() {
   });
 
   const [running, setRunning] = useState(false);
-  const [, setRenderTick] = useState(0);
+  const [timerNowMs, setTimerNowMs] = useState(() => performance.now());
   const [showHistory, setShowHistory] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showRestartConfirm, setShowRestartConfirm] = useState(false);
-  const [timerRevision, setTimerRevision] = useState(0);
   const lastCallAtRef = useRef(0);
   const pausedAtRef = useRef<number | null>(null);
   const hasCalledRef = useRef(false);
-  const timerRevisionRef = useRef(0);
+  const hiddenAtRef = useRef<number | null>(null);
   const speechDelayRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -81,74 +82,106 @@ export function App() {
     [clearPendingSpeech, speakCard]
   );
 
-  const advanceTimerRevision = useCallback(() => {
-    const next = timerRevisionRef.current + 1;
-    timerRevisionRef.current = next;
-    setTimerRevision(next);
-  }, []);
-
   // Draw + speak one card; stop running when deck is empty.
-  const tick = useCallback((): boolean => {
+  const tick = useCallback((callAtMs = performance.now()): boolean => {
     const card = callNext();
     if (!card) {
       setRunning(false);
       return false;
     }
-    lastCallAtRef.current = Date.now();
+    lastCallAtRef.current = callAtMs;
+    setTimerNowMs(callAtMs);
     scheduleSpeech(card);
     return true;
   }, [callNext, scheduleSpeech]);
 
-  // Keep a stable ref to the latest tick so scheduled timeouts always see current closure.
+  // Keep a stable ref to the latest tick so timer callbacks always see current closure.
   const tickRef = useRef(tick);
   useEffect(() => {
     tickRef.current = tick;
   }, [tick]);
 
   // Auto-mode: pause-aware timer.
-  // - First play (no cards yet): draw immediately, then schedule the next one-shot timeout.
+  // - First play (no cards yet): draw immediately, then start one clock loop.
   // - Pause: capture pausedAt so the pause duration can later be subtracted
   //   from the running clock; the current card stays unchanged.
   // - Resume: shift lastCallAt forward by the pause duration so the countdown
   //   continues from where it left off instead of restarting or skipping.
-  // - Manual next/restart/history actions bump timerRevision to invalidate stale timeouts.
+  // - Hidden tabs are treated like an implicit pause to avoid stale UI jumps.
   useEffect(() => {
+    const now = performance.now();
+
     if (!running) {
       if (hasCalledRef.current && pausedAtRef.current === null) {
-        pausedAtRef.current = Date.now();
+        pausedAtRef.current = now;
       }
       return;
     }
 
-    const intervalMs = SPEEDS[tweaks.speed].seconds * 1000;
-
     if (!hasCalledRef.current) {
-      if (tickRef.current()) advanceTimerRevision();
+      tickRef.current(now);
       return;
     } else if (pausedAtRef.current !== null) {
-      lastCallAtRef.current += Date.now() - pausedAtRef.current;
+      lastCallAtRef.current += now - pausedAtRef.current;
       pausedAtRef.current = null;
     }
 
-    const elapsed = Date.now() - lastCallAtRef.current;
-    const remaining = Math.max(0, intervalMs - elapsed);
-    const scheduledRevision = timerRevisionRef.current;
+    setTimerNowMs(now);
 
-    const timeoutId = window.setTimeout(() => {
-      if (timerRevisionRef.current !== scheduledRevision) return;
-      if (tickRef.current()) advanceTimerRevision();
-    }, remaining);
+    const intervalId = window.setInterval(() => {
+      const nextNow = performance.now();
+
+      if (document.hidden) {
+        if (hiddenAtRef.current === null) {
+          hiddenAtRef.current = nextNow;
+        }
+        return;
+      }
+
+      if (hiddenAtRef.current !== null) {
+        lastCallAtRef.current += nextNow - hiddenAtRef.current;
+        hiddenAtRef.current = null;
+      }
+
+      setTimerNowMs(nextNow);
+    }, TIMER_REFRESH_MS);
 
     return () => {
-      window.clearTimeout(timeoutId);
+      window.clearInterval(intervalId);
     };
-  }, [advanceTimerRevision, running, timerRevision, tweaks.speed]);
+  }, [called.length, running, tweaks.speed]);
 
-  // Countdown bar 200ms re-render driver.
+  // Advance cards from the same sampled clock value used to render the countdown.
   useEffect(() => {
-    if (!running) return;
-    const id = window.setInterval(() => setRenderTick(n => n + 1), 200);
-    return () => window.clearInterval(id);
+    if (!running || !hasCalledRef.current || document.hidden) return;
+
+    const intervalMs = SPEEDS[tweaks.speed].seconds * 1000;
+    if (timerNowMs - lastCallAtRef.current < intervalMs) return;
+
+    tickRef.current(timerNowMs);
+  }, [running, timerNowMs, tweaks.speed]);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      const now = performance.now();
+
+      if (document.hidden) {
+        hiddenAtRef.current = now;
+        return;
+      }
+
+      if (hiddenAtRef.current !== null) {
+        if (running && hasCalledRef.current) {
+          lastCallAtRef.current += now - hiddenAtRef.current;
+        }
+        hiddenAtRef.current = null;
+      }
+
+      setTimerNowMs(now);
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, [running]);
 
   // Cancel any in-flight speech when component unmounts.
@@ -163,32 +196,37 @@ export function App() {
   // Handlers
   const handleRequestRestart = useCallback(() => {
     if (called.length === 0) return;
-    advanceTimerRevision();
     setRunning(false);
     setShowRestartConfirm(true);
-  }, [advanceTimerRevision, called.length]);
+  }, [called.length]);
 
   const handleCancelRestart = useCallback(() => {
     setShowRestartConfirm(false);
   }, []);
 
   const handleConfirmRestart = useCallback(() => {
-    advanceTimerRevision();
+    const now = performance.now();
     clearPendingSpeech();
     cancelSpeech();
     resetDeck();
     lastCallAtRef.current = 0;
     pausedAtRef.current = null;
     hasCalledRef.current = false;
+    hiddenAtRef.current = null;
+    setTimerNowMs(now);
     setRunning(false);
     setShowHistory(false);
     setShowSettings(false);
     setShowRestartConfirm(false);
-  }, [advanceTimerRevision, cancelSpeech, clearPendingSpeech, resetDeck]);
+  }, [cancelSpeech, clearPendingSpeech, resetDeck]);
 
   const handleTogglePlay = () => {
     if (deck.length === 0 && called.length > 0) {
       handleRequestRestart();
+      return;
+    }
+    if (!running && called.length === 0) {
+      if (tick(performance.now())) setRunning(true);
       return;
     }
     setRunning(r => !r);
@@ -196,17 +234,16 @@ export function App() {
 
   const handleNext = () => {
     if (deck.length === 0) return;
-    if (!tick()) return;
+    const now = performance.now();
+    if (!tick(now)) return;
     // If we're paused, the just-drawn card resets the countdown — the pause
     // duration before this click shouldn't count toward the new card's timer.
     if (pausedAtRef.current !== null) {
-      pausedAtRef.current = Date.now();
+      pausedAtRef.current = now;
     }
-    if (running) advanceTimerRevision();
   };
 
   const handleOpenHistory = () => {
-    advanceTimerRevision();
     setRunning(false);
     setShowHistory(true);
   };
@@ -217,11 +254,11 @@ export function App() {
 
   // Derived: countdown + primary control mode
   const intervalMs = SPEEDS[tweaks.speed].seconds * 1000;
-  const elapsedMs = Date.now() - lastCallAtRef.current;
+  const elapsedMs = Math.max(0, timerNowMs - lastCallAtRef.current);
   const secondsLeft = running
     ? Math.max(0, Math.ceil((intervalMs - elapsedMs) / 1000))
     : SPEEDS[tweaks.speed].seconds;
-  const progressPct = running ? Math.min(100, (elapsedMs / intervalMs) * 100) : 0;
+  const progressPct = running ? Math.min(100, Math.max(0, (elapsedMs / intervalMs) * 100)) : 0;
 
   const primaryMode: 'call' | 'pause' | 'resume' | 'restart' =
     deck.length === 0 && called.length > 0
