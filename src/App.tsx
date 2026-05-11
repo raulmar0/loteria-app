@@ -16,6 +16,7 @@ import { PALETTES } from './data/palettes';
 import { SPEEDS } from './data/speeds';
 import { useDeck } from './hooks/useDeck';
 import { usePwaInstallPrompt } from './hooks/usePwaInstallPrompt';
+import { usePwaUpdate } from './hooks/usePwaUpdate';
 import { useTTS } from './hooks/useTTS';
 import { useTweaks } from './hooks/useTweaks';
 import { makeT } from './lib/i18n';
@@ -37,6 +38,7 @@ export function App() {
     language,
   });
   const { canInstall: canInstallPwa, showIosHint: showIosInstallHint, installing: installingPwa, install: installPwa } = usePwaInstallPrompt();
+  const { supported: canUpdatePwa, updating: updatingPwa, update: updatePwa } = usePwaUpdate();
 
   const [running, setRunning] = useState(false);
   const [timerNowMs, setTimerNowMs] = useState(() => performance.now());
@@ -313,6 +315,19 @@ export function App() {
     setTweak('language', language === 'es' ? 'en' : 'es');
   };
 
+  const canShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+  const handleIosShare = useCallback(async () => {
+    if (!canShare) return;
+    try {
+      await navigator.share({
+        title: 'Lotería — El Cantor',
+        url: window.location.href,
+      });
+    } catch {
+      // User cancelled or share failed — nothing to do.
+    }
+  }, [canShare]);
+
   // Derived: countdown + primary control mode
   const intervalMs = SPEEDS[tweaks.speed].seconds * 1000;
   const elapsedMs = Math.max(0, timerNowMs - lastCallAtRef.current);
@@ -470,6 +485,10 @@ export function App() {
         installingPwa={installingPwa}
         onInstallPwa={() => { void installPwa(); }}
         showIosInstallHint={showIosInstallHint}
+        onIosShare={canShare ? handleIosShare : undefined}
+        canUpdatePwa={canUpdatePwa}
+        updatingPwa={updatingPwa}
+        onUpdatePwa={() => { void updatePwa(); }}
         palette={palette}
         fonts={fonts}
         ttsSupported={ttsSupported}
@@ -496,6 +515,10 @@ export function App() {
             'Toca Compartir y luego «Añadir a la pantalla de inicio»',
             'Tap Share, then "Add to Home Screen"'
           ),
+          updateApp: t('Actualizar app', 'Update app'),
+          updateAppDesc: t('Obtener la última versión', 'Get the latest version'),
+          updateAppButton: t('Actualizar', 'Update'),
+          updateAppUpdating: t('Actualizando…', 'Updating…'),
           resetDeck: t('Reiniciar mazo', 'Reset deck'),
           about: t('Acerca de', 'About'),
           aboutDesc: t('Lotería — El Cantor', 'Lotería — The Caller'),
