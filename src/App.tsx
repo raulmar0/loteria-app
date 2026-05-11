@@ -39,11 +39,13 @@ export function App() {
   const [showHistory, setShowHistory] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showRestartConfirm, setShowRestartConfirm] = useState(false);
+  const [introPending, setIntroPending] = useState(false);
   const lastCallAtRef = useRef(0);
   const pausedAtRef = useRef<number | null>(null);
   const hasCalledRef = useRef(false);
   const hiddenAtRef = useRef<number | null>(null);
   const speechDelayRef = useRef<number | null>(null);
+  const introSequenceRef = useRef(0);
 
   useEffect(() => {
     hasCalledRef.current = called.length > 0;
@@ -51,21 +53,17 @@ export function App() {
 
   // Build the TTS string for a card based on current language + verses setting
   const buildText = useCallback(
-    (card: Card, includeIntro = false): string => {
+    (card: Card): string => {
       const name = language === 'es' ? card.es : card.en;
       const verse = language === 'es' ? card.verseEs : card.verseEn;
-      const cardText = tweaks.verses ? `${name}. ${verse}` : name;
-
-      return includeIntro && language === 'es'
-        ? `${FIRST_CALL_INTRO_ES} ${cardText}`
-        : cardText;
+      return tweaks.verses ? `${name}. ${verse}` : name;
     },
     [language, tweaks.verses]
   );
 
   const speakCard = useCallback(
-    (card: Card, includeIntro = false) => {
-      speak(buildText(card, includeIntro));
+    (card: Card) => {
+      speak(buildText(card));
     },
     [speak, buildText]
   );
@@ -77,11 +75,11 @@ export function App() {
   }, []);
 
   const scheduleSpeech = useCallback(
-    (card: Card, includeIntro = false) => {
+    (card: Card) => {
       clearPendingSpeech();
       speechDelayRef.current = window.setTimeout(() => {
         speechDelayRef.current = null;
-        speakCard(card, includeIntro);
+        speakCard(card);
       }, 50);
     },
     [clearPendingSpeech, speakCard]
@@ -89,7 +87,6 @@ export function App() {
 
   // Draw + speak one card; stop running when deck is empty.
   const tick = useCallback((callAtMs = performance.now()): boolean => {
-    const isFirstCall = !hasCalledRef.current;
     const card = callNext();
     if (!card) {
       setRunning(false);
@@ -97,7 +94,7 @@ export function App() {
     }
     lastCallAtRef.current = callAtMs;
     setTimerNowMs(callAtMs);
-    scheduleSpeech(card, isFirstCall);
+    scheduleSpeech(card);
     return true;
   }, [callNext, scheduleSpeech]);
 
@@ -106,6 +103,42 @@ export function App() {
   useEffect(() => {
     tickRef.current = tick;
   }, [tick]);
+
+  const cancelPendingIntro = useCallback((updateState = true) => {
+    introSequenceRef.current += 1;
+    if (updateState) setIntroPending(false);
+  }, []);
+
+  const startFirstCallSequence = useCallback((autoRun: boolean) => {
+    if (introPending) return;
+
+    const sequence = introSequenceRef.current + 1;
+    introSequenceRef.current = sequence;
+
+    const callFirstCard = () => {
+      if (introSequenceRef.current !== sequence) return;
+
+      setIntroPending(false);
+      const now = performance.now();
+      if (tickRef.current(now) && autoRun) {
+        setRunning(true);
+      }
+    };
+
+    if (language !== 'es') {
+      callFirstCard();
+      return;
+    }
+
+    setIntroPending(true);
+    const didSpeakIntro = speak(FIRST_CALL_INTRO_ES, {
+      onEnd: callFirstCard,
+    });
+
+    if (!didSpeakIntro) {
+      callFirstCard();
+    }
+  }, [introPending, language, speak]);
 
   // Auto-mode: pause-aware timer.
   // - First play (no cards yet): draw immediately, then start one clock loop.
@@ -193,18 +226,20 @@ export function App() {
   // Cancel any in-flight speech when component unmounts.
   useEffect(
     () => () => {
+      cancelPendingIntro(false);
       clearPendingSpeech();
       cancelSpeech();
     },
-    [cancelSpeech, clearPendingSpeech]
+    [cancelPendingIntro, cancelSpeech, clearPendingSpeech]
   );
 
   // Handlers
   const handleRequestRestart = useCallback(() => {
     if (called.length === 0) return;
+    cancelPendingIntro();
     setRunning(false);
     setShowRestartConfirm(true);
-  }, [called.length]);
+  }, [called.length, cancelPendingIntro]);
 
   const handleCancelRestart = useCallback(() => {
     setShowRestartConfirm(false);
@@ -212,6 +247,7 @@ export function App() {
 
   const handleConfirmRestart = useCallback(() => {
     const now = performance.now();
+    cancelPendingIntro();
     clearPendingSpeech();
     cancelSpeech();
     resetDeck();
@@ -224,22 +260,28 @@ export function App() {
     setShowHistory(false);
     setShowSettings(false);
     setShowRestartConfirm(false);
-  }, [cancelSpeech, clearPendingSpeech, resetDeck]);
+  }, [cancelPendingIntro, cancelSpeech, clearPendingSpeech, resetDeck]);
 
   const handleTogglePlay = () => {
+    if (introPending) return;
     if (deck.length === 0 && called.length > 0) {
       handleRequestRestart();
       return;
     }
     if (!running && called.length === 0) {
-      if (tick(performance.now())) setRunning(true);
+      startFirstCallSequence(true);
       return;
     }
     setRunning(r => !r);
   };
 
   const handleNext = () => {
+    if (introPending) return;
     if (deck.length === 0) return;
+    if (called.length === 0) {
+      startFirstCallSequence(false);
+      return;
+    }
     const now = performance.now();
     if (!tick(now)) return;
     // If we're paused, the just-drawn card resets the countdown — the pause
@@ -250,11 +292,15 @@ export function App() {
   };
 
   const handleOpenHistory = () => {
+    cancelPendingIntro();
+    cancelSpeech();
     setRunning(false);
     setShowHistory(true);
   };
 
   const handleOpenSettings = () => {
+    cancelPendingIntro();
+    cancelSpeech();
     setRunning(false);
     setShowSettings(true);
   };

@@ -7,7 +7,7 @@ interface UseTTSOpts {
 }
 
 interface UseTTSResult {
-  speak: (text: string) => void;
+  speak: (text: string, options?: { onEnd?: () => void }) => boolean;
   cancel: () => void;
   ready: boolean;
   supported: boolean;
@@ -60,8 +60,8 @@ export function useTTS({ enabled, language }: UseTTSOpts): UseTTSResult {
   }, [supported]);
 
   const speak = useCallback(
-    (text: string) => {
-      if (!supported || !enabled || !text) return;
+    (text: string, options?: { onEnd?: () => void }) => {
+      if (!supported || !enabled || !text) return false;
       try {
         const synth = window.speechSynthesis;
         synth.cancel();
@@ -70,9 +70,13 @@ export function useTTS({ enabled, language }: UseTTSOpts): UseTTSResult {
         utter.rate = 0.95;
         utter.pitch = 1.0;
         if (voiceRef.current) utter.voice = voiceRef.current;
+        utter.onend = () => options?.onEnd?.();
+        utter.onerror = () => options?.onEnd?.();
         synth.speak(utter);
+        return true;
       } catch (err) {
         console.warn('TTS speak failed', err);
+        return false;
       }
     },
     [supported, enabled, language]
