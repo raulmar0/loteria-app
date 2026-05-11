@@ -64,7 +64,7 @@ export const TWEAK_DEFAULTS: Tweaks = {
   palette: 'fiesta',
   font: 'display',
   voice: true,
-  verses: true,
+  verses: false,
   speed: 'medio',
   language: 'es',
 };

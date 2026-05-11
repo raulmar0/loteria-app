@@ -19,6 +19,7 @@ import { makeT } from './lib/i18n';
 import type { Card } from './types';
 
 const TIMER_REFRESH_MS = 100;
+const FIRST_CALL_INTRO_ES = 'corre y se va corriendo con:';
 
 export function App() {
   const { tweaks, setTweak } = useTweaks();
@@ -50,17 +51,21 @@ export function App() {
 
   // Build the TTS string for a card based on current language + verses setting
   const buildText = useCallback(
-    (card: Card): string => {
+    (card: Card, includeIntro = false): string => {
       const name = language === 'es' ? card.es : card.en;
       const verse = language === 'es' ? card.verseEs : card.verseEn;
-      return tweaks.verses ? `${name}. ${verse}` : name;
+      const cardText = tweaks.verses ? `${name}. ${verse}` : name;
+
+      return includeIntro && language === 'es'
+        ? `${FIRST_CALL_INTRO_ES} ${cardText}`
+        : cardText;
     },
     [language, tweaks.verses]
   );
 
   const speakCard = useCallback(
-    (card: Card) => {
-      speak(buildText(card));
+    (card: Card, includeIntro = false) => {
+      speak(buildText(card, includeIntro));
     },
     [speak, buildText]
   );
@@ -72,11 +77,11 @@ export function App() {
   }, []);
 
   const scheduleSpeech = useCallback(
-    (card: Card) => {
+    (card: Card, includeIntro = false) => {
       clearPendingSpeech();
       speechDelayRef.current = window.setTimeout(() => {
         speechDelayRef.current = null;
-        speakCard(card);
+        speakCard(card, includeIntro);
       }, 50);
     },
     [clearPendingSpeech, speakCard]
@@ -84,6 +89,7 @@ export function App() {
 
   // Draw + speak one card; stop running when deck is empty.
   const tick = useCallback((callAtMs = performance.now()): boolean => {
+    const isFirstCall = !hasCalledRef.current;
     const card = callNext();
     if (!card) {
       setRunning(false);
@@ -91,7 +97,7 @@ export function App() {
     }
     lastCallAtRef.current = callAtMs;
     setTimerNowMs(callAtMs);
-    scheduleSpeech(card);
+    scheduleSpeech(card, isFirstCall);
     return true;
   }, [callNext, scheduleSpeech]);
 
@@ -248,6 +254,11 @@ export function App() {
     setShowHistory(true);
   };
 
+  const handleOpenSettings = () => {
+    setRunning(false);
+    setShowSettings(true);
+  };
+
   const handleToggleLanguage = () => {
     setTweak('language', language === 'es' ? 'en' : 'es');
   };
@@ -301,7 +312,7 @@ export function App() {
       <AppHeader
         language={language}
         onToggleLanguage={handleToggleLanguage}
-        onOpenSettings={() => setShowSettings(true)}
+        onOpenSettings={handleOpenSettings}
         fonts={fonts}
         brandSub={t('El cantor', 'The Caller')}
         langButtonLabel={t('Cambiar idioma', 'Toggle language')}
