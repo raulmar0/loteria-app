@@ -491,6 +491,8 @@ export function App() {
           installAppDesc: t('(para uso offline)', '(for offline use)'),
           installAppButton: t('Instalar', 'Install'),
           resetDeck: t('Reiniciar mazo', 'Reset deck'),
+          about: t('Acerca de', 'About'),
+          aboutDesc: t('Lotería — El Cantor', 'Lotería — The Caller'),
         }}
       />
 

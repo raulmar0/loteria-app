@@ -1,0 +1,16 @@
+{
+  "name": "Lotería — El Cantor",
+  "short_name": "Lotería",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#D62828",
+  "theme_color": "#D62828",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

@@ -563,6 +563,7 @@ body {
 .setting-info { flex: 1; }
 .setting-label { font-size: 16px; line-height: 1.1; color: var(--ink); }
 .setting-desc { font-size: 12px; color: var(--ink-soft); margin-top: 3px; }
+.setting-version { font-size: 13px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
 .switch {
   position: relative;
   width: 52px; height: 30px;

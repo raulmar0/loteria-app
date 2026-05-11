@@ -31,6 +31,8 @@ interface Props {
     installAppDesc: string;
     installAppButton: string;
     resetDeck: string;
+    about: string;
+    aboutDesc: string;
   };
 }
 
@@ -149,6 +151,14 @@ export function SettingsSheet({
           </button>
         </div>
       )}
+
+      <div className="setting-row">
+        <div className="setting-info">
+          <div className="setting-label" style={{ fontFamily: fonts.head }}>{labels.about}</div>
+          <div className="setting-desc" style={{ fontFamily: fonts.body }}>{labels.aboutDesc}</div>
+        </div>
+        <div className="setting-version" style={{ fontFamily: fonts.body }}>v{__APP_VERSION__}</div>
+      </div>
 
       <button
         type="button"
