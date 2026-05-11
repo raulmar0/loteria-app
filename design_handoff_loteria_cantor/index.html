@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<title>Lotería — El Cantor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Archivo+Black&family=Bagel+Fat+One&family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  /* Page-level: center the phone on larger viewports, full-bleed on mobile */
+  html, body { background: #14110d; }
+  body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+      radial-gradient(circle at 20% 20%, #2a1e15 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, #1a2030 0%, transparent 50%),
+      #0f0d0a;
+  }
+  body::before {
+    content: "";
+    position: fixed; inset: 0;
+    background-image: radial-gradient(circle at 1px 1px, rgba(255,200,100,0.06) 1px, transparent 1.5px);
+    background-size: 16px 16px;
+    pointer-events: none;
+  }
+  #stage {
+    position: relative;
+    width: 402px;
+    height: 874px;
+    transform-origin: center center;
+    flex-shrink: 0;
+  }
+  #stage > div { width: 100%; height: 100%; }
+  /* On mobile, fill the viewport and drop the frame */
+  @media (max-width: 600px) {
+    body { display: block; }
+    #stage { width: 100vw; height: 100vh; height: 100dvh; }
+    #stage > .ios-device { width: 100% !important; height: 100% !important; border-radius: 0 !important; box-shadow: none !important; }
+    .hide-on-mobile-frame { display: none !important; }
+  }
+</style>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="stage">
+  <div id="root"></div>
+</div>
+
+<script src="cards.js"></script>
+<script type="text/babel" src="ios-frame.jsx"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="icons.jsx"></script>
+<script type="text/babel" src="cantor.jsx"></script>
+
+<script type="text/babel">
+  const { useEffect, useState } = React;
+
+  // Auto-scale stage to viewport for non-mobile presentation
+  function fitStage() {
+    const stage = document.getElementById('stage');
+    if (!stage) return;
+    if (window.innerWidth <= 600) {
+      stage.style.transform = '';
+      return;
+    }
+    const baseW = 402;
+    const baseH = 874;
+    const padding = 40;
+    const scale = Math.min(
+      (window.innerWidth - padding) / baseW,
+      (window.innerHeight - padding) / baseH,
+      1.1
+    );
+    stage.style.transform = `scale(${scale})`;
+  }
+  window.addEventListener('resize', fitStage);
+  setTimeout(fitStage, 50);
+
+  function Shell() {
+    const isMobile = window.innerWidth <= 600;
+    return isMobile ? (
+      <div className="ios-device" style={{ width: '100%', height: '100%', background: '#000', position: 'relative', overflow: 'hidden' }}>
+        <window.CantorApp />
+      </div>
+    ) : (
+      <window.IOSDevice width={402} height={874}>
+        <div style={{ width: '100%', height: '100%' }}>
+          <div style={{ paddingTop: 50, height: '100%', boxSizing: 'border-box' }}>
+            <window.CantorApp />
+          </div>
+        </div>
+      </window.IOSDevice>
+    );
+  }
+
+  // wait for fonts + voices
+  window.addEventListener('load', () => {
+    if (window.speechSynthesis) {
+      window.speechSynthesis.getVoices();
+      window.speechSynthesis.onvoiceschanged = () => {};
+    }
+  });
+
+  ReactDOM.createRoot(document.getElementById('root')).render(<Shell />);
+</script>
+
+</body>
+</html>

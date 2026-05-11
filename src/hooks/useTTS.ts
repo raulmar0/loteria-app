@@ -1,0 +1,87 @@
+import { useCallback, useEffect, useRef, useState } from 'react';
+import type { Language } from '../types';
+
+interface UseTTSOpts {
+  enabled: boolean;
+  language: Language;
+}
+
+interface UseTTSResult {
+  speak: (text: string) => void;
+  cancel: () => void;
+  ready: boolean;
+  supported: boolean;
+}
+
+function pickVoice(language: Language, voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | undefined {
+  const prefix = language === 'es' ? 'es' : 'en';
+  const preferred = language === 'es' ? ['es-MX', 'es-US', 'es-ES'] : ['en-US', 'en-GB', 'en-AU'];
+  for (const tag of preferred) {
+    const exact = voices.find(v => v.lang.toLowerCase() === tag.toLowerCase());
+    if (exact) return exact;
+  }
+  return voices.find(v => v.lang.toLowerCase().startsWith(prefix));
+}
+
+export function useTTS({ enabled, language }: UseTTSOpts): UseTTSResult {
+  const supported = typeof window !== 'undefined' && 'speechSynthesis' in window;
+  const [ready, setReady] = useState(false);
+  const voiceRef = useRef<SpeechSynthesisVoice | undefined>(undefined);
+
+  useEffect(() => {
+    if (!supported) return;
+    const synth = window.speechSynthesis;
+
+    const refresh = () => {
+      const voices = synth.getVoices();
+      voiceRef.current = pickVoice(language, voices);
+      if (voices.length > 0) setReady(true);
+    };
+
+    refresh();
+    synth.addEventListener('voiceschanged', refresh);
+    const fallback = window.setTimeout(() => setReady(true), 1000);
+
+    return () => {
+      synth.removeEventListener('voiceschanged', refresh);
+      window.clearTimeout(fallback);
+    };
+  }, [supported, language]);
+
+  useEffect(() => {
+    if (!supported) return;
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') {
+        try { window.speechSynthesis.resume(); } catch { /* noop */ }
+      }
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [supported]);
+
+  const speak = useCallback(
+    (text: string) => {
+      if (!supported || !enabled || !text) return;
+      try {
+        const synth = window.speechSynthesis;
+        synth.cancel();
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = language === 'es' ? 'es-MX' : 'en-US';
+        utter.rate = 0.95;
+        utter.pitch = 1.0;
+        if (voiceRef.current) utter.voice = voiceRef.current;
+        synth.speak(utter);
+      } catch (err) {
+        console.warn('TTS speak failed', err);
+      }
+    },
+    [supported, enabled, language]
+  );
+
+  const cancel = useCallback(() => {
+    if (!supported) return;
+    try { window.speechSynthesis.cancel(); } catch { /* noop */ }
+  }, [supported]);
+
+  return { speak, cancel, ready, supported };
+}
