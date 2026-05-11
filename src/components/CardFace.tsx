@@ -38,7 +38,7 @@ export function CardFace({ card, language, showVerse, palette, fonts, emptyLabel
 
         <div className="card-icon-wrap" style={{ background: `${card.color}15` }}>
           <div className="card-icon-bg" style={{ background: card.color }} />
-          <LoteriaIcon name={card.icon} color={palette.paper} size={180} />
+          <LoteriaIcon name={card.icon} color={palette.paper} accent={card.color} size={180} />
         </div>
 
         <div className="card-name" style={{ fontFamily: fonts.head, color: card.color }}>{name}</div>
