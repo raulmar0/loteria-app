@@ -315,19 +315,6 @@ export function App() {
     setTweak('language', language === 'es' ? 'en' : 'es');
   };
 
-  const canShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
-  const handleIosShare = useCallback(async () => {
-    if (!canShare) return;
-    try {
-      await navigator.share({
-        title: 'Lotería — El Cantor',
-        url: window.location.href,
-      });
-    } catch {
-      // User cancelled or share failed — nothing to do.
-    }
-  }, [canShare]);
-
   // Derived: countdown + primary control mode
   const intervalMs = SPEEDS[tweaks.speed].seconds * 1000;
   const elapsedMs = Math.max(0, timerNowMs - lastCallAtRef.current);
@@ -485,7 +472,6 @@ export function App() {
         installingPwa={installingPwa}
         onInstallPwa={() => { void installPwa(); }}
         showIosInstallHint={showIosInstallHint}
-        onIosShare={canShare ? handleIosShare : undefined}
         canUpdatePwa={canUpdatePwa}
         updatingPwa={updatingPwa}
         onUpdatePwa={() => { void updatePwa(); }}

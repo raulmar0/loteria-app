@@ -575,18 +575,6 @@ body {
   line-height: 1.35;
 }
 .ios-install-hint .ios-share-icon { flex-shrink: 0; color: var(--accent); }
-.ios-install-hint-button {
-  width: 100%;
-  border: 2px solid var(--ink);
-  text-align: left;
-  cursor: pointer;
-  box-shadow: 2px 2px 0 var(--ink);
-  font-family: inherit;
-}
-.ios-install-hint-button:active {
-  transform: translate(2px, 2px);
-  box-shadow: 0 0 0 var(--ink);
-}
 .setting-version { font-size: 13px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
 .switch {
   position: relative;

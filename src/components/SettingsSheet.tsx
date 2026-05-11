@@ -15,7 +15,6 @@ interface Props {
   installingPwa: boolean;
   onInstallPwa: () => void;
   showIosInstallHint: boolean;
-  onIosShare?: () => void;
   canUpdatePwa: boolean;
   updatingPwa: boolean;
   onUpdatePwa: () => void;
@@ -57,7 +56,6 @@ export function SettingsSheet({
   installingPwa,
   onInstallPwa,
   showIosInstallHint,
-  onIosShare,
   canUpdatePwa,
   updatingPwa,
   onUpdatePwa,
@@ -170,52 +168,25 @@ export function SettingsSheet({
       {showIosInstallHint && !canInstallPwa && (
         <div className="setting-row col">
           <div className="setting-label" style={{ fontFamily: fonts.head }}>{labels.installApp}</div>
-          {onIosShare ? (
-            <button
-              type="button"
-              className="ios-install-hint ios-install-hint-button"
-              onClick={onIosShare}
-              style={{ fontFamily: fonts.body }}
+          <div className="ios-install-hint" style={{ fontFamily: fonts.body }}>
+            <svg
+              className="ios-share-icon"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
             >
-              <svg
-                className="ios-share-icon"
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M12 3v13" />
-                <path d="m7 8 5-5 5 5" />
-                <path d="M5 12v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8" />
-              </svg>
-              <span>{labels.iosInstallHint}</span>
-            </button>
-          ) : (
-            <div className="ios-install-hint" style={{ fontFamily: fonts.body }}>
-              <svg
-                className="ios-share-icon"
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M12 3v13" />
-                <path d="m7 8 5-5 5 5" />
-                <path d="M5 12v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8" />
-              </svg>
-              <span>{labels.iosInstallHint}</span>
-            </div>
-          )}
+              <path d="M12 3v13" />
+              <path d="m7 8 5-5 5 5" />
+              <path d="M5 12v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8" />
+            </svg>
+            <span>{labels.iosInstallHint}</span>
+          </div>
         </div>
       )}
 
