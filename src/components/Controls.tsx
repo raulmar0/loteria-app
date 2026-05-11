@@ -6,6 +6,7 @@ interface Props {
   primaryMode: PrimaryMode;
   canRestart: boolean;
   canNext: boolean;
+  disablePrimary?: boolean;
   onRestart: () => void;
   onTogglePlay: () => void;
   onNext: () => void;
@@ -24,6 +25,7 @@ export function Controls({
   primaryMode,
   canRestart,
   canNext,
+  disablePrimary = false,
   onRestart,
   onTogglePlay,
   onNext,
@@ -57,6 +59,7 @@ export function Controls({
         type="button"
         className="ctrl ctrl-primary"
         onClick={onTogglePlay}
+        disabled={disablePrimary}
         style={{ background: palette.accent }}
         aria-label={primaryLabel}
         aria-pressed={primaryMode === 'pause'}

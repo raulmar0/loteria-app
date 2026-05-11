@@ -9,6 +9,12 @@ export function isStandalonePwa(displayModeStandalone: boolean, navigatorStandal
   return displayModeStandalone || navigatorStandalone === true;
 }
 
+export function isIos(): boolean {
+  if (typeof window === 'undefined') return false;
+  const ua = window.navigator.userAgent;
+  return /iPad|iPhone|iPod/.test(ua) || (ua.includes('Macintosh') && 'ontouchend' in document);
+}
+
 export async function promptPwaInstall(installPrompt: PwaInstallPrompt | null): Promise<PwaInstallOutcome> {
   if (!installPrompt) return 'unavailable';
 

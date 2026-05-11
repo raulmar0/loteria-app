@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { isStandalonePwa, promptPwaInstall, type PwaInstallOutcome, type PwaInstallPrompt } from '../lib/pwaInstall';
+import { isIos, isStandalonePwa, promptPwaInstall, type PwaInstallOutcome, type PwaInstallPrompt } from '../lib/pwaInstall';
 
 type BeforeInstallPromptEvent = Event & PwaInstallPrompt;
 
@@ -14,6 +14,7 @@ export function usePwaInstallPrompt() {
   const [installPrompt, setInstallPrompt] = useState<PwaInstallPrompt | null>(null);
   const [installed, setInstalled] = useState(getInitialInstalledState);
   const [installing, setInstalling] = useState(false);
+  const [isIosBrowser] = useState(() => isIos());
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (event: Event) => {
@@ -56,6 +57,7 @@ export function usePwaInstallPrompt() {
 
   return {
     canInstall: Boolean(installPrompt) && !installed,
+    showIosHint: isIosBrowser && !installed,
     installed,
     installing,
     install,

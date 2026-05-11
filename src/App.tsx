@@ -36,7 +36,7 @@ export function App() {
     enabled: tweaks.voice,
     language,
   });
-  const { canInstall: canInstallPwa, installing: installingPwa, install: installPwa } = usePwaInstallPrompt();
+  const { canInstall: canInstallPwa, showIosHint: showIosInstallHint, installing: installingPwa, install: installPwa } = usePwaInstallPrompt();
 
   const [running, setRunning] = useState(false);
   const [timerNowMs, setTimerNowMs] = useState(() => performance.now());
@@ -405,7 +405,7 @@ export function App() {
           showVerse={tweaks.verses}
           palette={palette}
           fonts={fonts}
-          emptyLabel={t('Listo para cantar', 'Ready to call')}
+          emptyLabel={introPending ? 'corre y se va corriendo con' : t('Listo para cantar', 'Ready to call')}
         />
 
         {running && (
@@ -422,6 +422,7 @@ export function App() {
           primaryMode={primaryMode}
           canRestart={called.length > 0}
           canNext={deck.length > 0}
+          disablePrimary={introPending}
           onRestart={handleRequestRestart}
           onTogglePlay={handleTogglePlay}
           onNext={handleNext}
@@ -468,6 +469,7 @@ export function App() {
         canInstallPwa={canInstallPwa}
         installingPwa={installingPwa}
         onInstallPwa={() => { void installPwa(); }}
+        showIosInstallHint={showIosInstallHint}
         palette={palette}
         fonts={fonts}
         ttsSupported={ttsSupported}
@@ -490,6 +492,10 @@ export function App() {
           installApp: t('Instalar app', 'Install app'),
           installAppDesc: t('(para uso offline)', '(for offline use)'),
           installAppButton: t('Instalar', 'Install'),
+          iosInstallHint: t(
+            'Toca Compartir y luego «Añadir a la pantalla de inicio»',
+            'Tap Share, then "Add to Home Screen"'
+          ),
           resetDeck: t('Reiniciar mazo', 'Reset deck'),
           about: t('Acerca de', 'About'),
           aboutDesc: t('Lotería — El Cantor', 'Lotería — The Caller'),
