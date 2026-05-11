@@ -10,6 +10,7 @@ interface Props {
   tweaks: Tweaks;
   setTweak: <K extends keyof Tweaks>(key: K, value: Tweaks[K]) => void;
   onResetDeck: () => void;
+  canResetDeck: boolean;
   palette: Palette;
   fonts: FontPair;
   ttsSupported: boolean;
@@ -33,6 +34,7 @@ export function SettingsSheet({
   tweaks,
   setTweak,
   onResetDeck,
+  canResetDeck,
   palette,
   fonts,
   ttsSupported,
@@ -109,10 +111,8 @@ export function SettingsSheet({
       <button
         type="button"
         className="reset-btn"
-        onClick={() => {
-          onResetDeck();
-          onClose();
-        }}
+        onClick={onResetDeck}
+        disabled={!canResetDeck}
         style={{ fontFamily: fonts.head, borderColor: palette.accent, color: palette.accent }}
       >
         {labels.resetDeck}

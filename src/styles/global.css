@@ -549,6 +549,63 @@ body {
   cursor: pointer;
   font-family: inherit;
 }
+.reset-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* ----- Confirmation dialog ----- */
+.confirm-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(0,0,0,0.55);
+  animation: fadeIn 0.2s;
+}
+.confirm-dialog {
+  width: min(100%, 360px);
+  background: var(--paper);
+  border: 3px solid var(--ink);
+  border-radius: 16px;
+  box-shadow: 6px 6px 0 var(--ink);
+  padding: 22px 18px 18px;
+  color: var(--ink);
+}
+.confirm-dialog h2 {
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.05;
+  color: var(--ink);
+}
+.confirm-dialog p {
+  margin: 10px 0 18px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+.confirm-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.confirm-btn {
+  min-height: 46px;
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-family: inherit;
+}
+.confirm-cancel {
+  background: var(--paper);
+  color: var(--ink);
+}
+.confirm-danger {
+  color: white;
+  box-shadow: 3px 3px 0 var(--ink);
+}
 
 /* ----- Reduced motion ----- */
 @media (prefers-reduced-motion: reduce) {
@@ -556,5 +613,6 @@ body {
   .card-face { animation: none; }
   .sheet { animation: none; }
   .sheet-backdrop { animation: none; }
+  .confirm-backdrop { animation: none; }
   .countdown-fill { transition: none; }
 }
