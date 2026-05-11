@@ -8,6 +8,7 @@ import { CountersRow } from './components/CountersRow';
 import { HistorySheet } from './components/HistorySheet';
 import { HistoryToggle } from './components/HistoryToggle';
 import { PapelPicado } from './components/PapelPicado';
+import { PwaInstallBanner } from './components/PwaInstallBanner';
 import { SettingsSheet } from './components/SettingsSheet';
 import { FONTS } from './data/fonts';
 import { PALETTES } from './data/palettes';
@@ -363,6 +364,13 @@ export function App() {
         brandSub={t('El cantor', 'The Caller')}
         langButtonLabel={t('Cambiar idioma', 'Toggle language')}
         settingsButtonLabel={t('Ajustes', 'Settings')}
+      />
+
+      <PwaInstallBanner
+        fonts={fonts}
+        message={t('Se puede instalar como PWA', 'This app can be installed as a PWA')}
+        installLabel={t('Instalar', 'Install')}
+        dismissLabel={t('Descartar aviso de instalación', 'Dismiss install notice')}
       />
 
       <main className="app-main" aria-label={t('Cantor de Lotería', 'Lotería Caller')}>

@@ -132,6 +132,72 @@ body {
 }
 .icon-btn:active { transform: translate(2px, 2px); box-shadow: 0 0 0 var(--ink); }
 
+/* ----- PWA banner ----- */
+.pwa-banner {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  margin: 0 18px 12px;
+  padding: 9px 10px;
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: 12px;
+  box-shadow: 3px 3px 0 var(--ink);
+  color: var(--ink);
+  flex-shrink: 0;
+}
+.pwa-banner-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: var(--accent3);
+  color: white;
+  border: 2px solid var(--ink);
+  box-shadow: 2px 2px 0 var(--ink);
+}
+.pwa-banner-message {
+  margin: 0;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.25;
+  font-weight: 700;
+}
+.pwa-banner-install,
+.pwa-banner-dismiss {
+  border: 2px solid var(--ink);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  font-family: inherit;
+}
+.pwa-banner-install {
+  min-height: 32px;
+  padding: 0 10px;
+  border-radius: 9px;
+  background: var(--accent);
+  color: white;
+  font-size: 12px;
+  line-height: 1;
+  box-shadow: 2px 2px 0 var(--ink);
+}
+.pwa-banner-dismiss {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+}
+.pwa-banner-install:active,
+.pwa-banner-dismiss:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0 0 0 var(--ink);
+}
+
 /* ----- Main ----- */
 .app-main {
   position: relative;
@@ -143,6 +209,15 @@ body {
   gap: 14px;
   overflow: hidden;
   min-height: 0;
+}
+
+@media (max-width: 360px) {
+  .pwa-banner {
+    grid-template-columns: auto 1fr auto;
+  }
+  .pwa-banner-install {
+    grid-column: 2 / 4;
+  }
 }
 
 /* ----- Counters ----- */
