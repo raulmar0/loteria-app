@@ -22,18 +22,6 @@ function face(accent: string, cx = 50, cy = 40, mood: 'smile' | 'serious' | 'sle
   );
 }
 
-function person(fill: string, accent: string, mood: 'smile' | 'serious' | 'sleepy' = 'smile') {
-  return (
-    <>
-      <ellipse cx="50" cy="38" rx="14" ry="15" fill={fill} />
-      {face(accent, 50, 38, mood)}
-      <path d="M32 90 L36 60 Q42 54 50 54 Q58 54 64 60 L68 90 Z" fill={fill} />
-      <path d="M40 64 Q50 70 60 64" stroke={accent} strokeWidth="2" fill="none" opacity="0.55" {...ROUND} />
-      <path d="M44 72 L44 88 M56 72 L56 88" stroke={accent} strokeWidth="1.6" opacity="0.45" {...ROUND} />
-    </>
-  );
-}
-
 export const ICON_RENDERERS: Record<IconName, IconRenderer> = {
   gallo: (f, a) => (
     <>
@@ -105,27 +93,40 @@ export const ICON_RENDERERS: Record<IconName, IconRenderer> = {
 
   dama: (f, a) => (
     <>
-      {/* head with wavy shoulder-length hair, chin visible between hair lobes */}
-      <path d="M50 8 Q30 8 29 24 Q28 34 33 39 Q29 46 37 46 Q42 46 44 42 Q47 45 50 45 Q53 45 56 42 Q58 46 63 46 Q71 46 67 39 Q72 34 71 24 Q70 8 50 8 Z" fill={f} />
-      {/* hairline */}
-      <path d="M38 22 Q44 15 50 17 Q56 15 62 22" stroke={a} strokeWidth="2" fill="none" opacity="0.55" {...ROUND} />
-      {/* hair waves on the side lobes */}
-      <path d="M35 24 Q31 30 35 35 Q32 40 37 43 M65 24 Q69 30 65 35 Q68 40 63 43" stroke={a} strokeWidth="1.8" fill="none" opacity="0.45" {...ROUND} />
+      {/* head */}
+      <circle cx="50" cy="16" r="9" fill={f} />
+      {/* hair cap sweeping to side bun */}
+      <path d="M40.5 19 A10 10 0 0 1 59.5 12 Q53 8.5 47 10.5 Q42 13 40.5 19 Z" fill={f} />
+      <circle cx="62.5" cy="10" r="5" fill={f} />
+      {/* hairline seam */}
+      <path d="M41 18.5 Q44 11 50 10.5 Q56 10 59.5 13" stroke={a} strokeWidth="1.8" fill="none" opacity="0.5" {...ROUND} />
+      {/* bun coil hint */}
+      <path d="M60.5 10.5 Q62.5 7.5 65 10" stroke={a} strokeWidth="1.8" fill="none" opacity="0.45" {...ROUND} />
       {/* face */}
-      <circle cx="44.5" cy="29" r="2.2" fill={a} />
-      <circle cx="55.5" cy="29" r="2.2" fill={a} />
-      <path d="M44 36 Q50 41 56 36" stroke={a} strokeWidth="2" fill="none" {...ROUND} />
+      <circle cx="46.5" cy="16" r="1.7" fill={a} />
+      <circle cx="53.5" cy="16" r="1.7" fill={a} />
+      <path d="M46.5 20.5 Q50 23 53.5 20.5" stroke={a} strokeWidth="1.8" fill="none" {...ROUND} />
       {/* neck */}
-      <path d="M46.5 43 L46.5 53 L53.5 53 L53.5 43 Z" fill={f} />
-      {/* dress: fitted bodice, clear waist, long flared skirt */}
-      <path d="M46 51 Q50 54.5 54 51 Q60 52 63 55 Q67 57 65 61 Q63 64.5 59 67 Q64 74 72 80 Q79 85 80 91 Q65 87 50 87 Q35 87 20 91 Q21 85 28 80 Q36 74 41 67 Q37 64.5 35 61 Q33 57 37 55 Q40 52 46 51 Z" fill={f} />
+      <path d="M47.2 23 L47.2 31 L52.8 31 L52.8 23 Z" fill={f} />
+      {/* dress: sloped shoulders, fitted bodice, waist pinch, A-line skirt */}
+      <path d="M46 29 Q40.5 30 35 35 Q38.5 42 44.5 48 Q36 62 26 82 Q24.5 86.5 29 87.5 Q50 91 71 87.5 Q75.5 86.5 74 82 Q64 62 55.5 48 Q61.5 42 65 35 Q59.5 30 54 29 Q50 31.5 46 29 Z" fill={f} />
+      {/* left arm relaxed along skirt */}
+      <path d="M38 34 Q32.5 45 30.5 58.5" stroke={f} strokeWidth="5" fill="none" {...ROUND} />
+      <circle cx="30.5" cy="62.5" r="3.5" fill={f} />
+      {/* right arm bent to waist */}
+      <path d="M62 33.5 Q69 40 61 47.5" stroke={f} strokeWidth="5" fill="none" {...ROUND} />
+      <circle cx="60" cy="48" r="3.5" fill={f} />
+      {/* folding fan */}
+      <path d="M60 47.5 L66 30 A18 18 0 0 1 77.5 43 Z" fill={f} />
+      {/* fan ribs */}
+      <path d="M61 45 L67 32.5 M61.8 45.8 L73 37 M62.3 46.5 L76 41.5" stroke={a} strokeWidth="1.8" fill="none" opacity="0.55" {...ROUND} />
       {/* necklace with pendant */}
-      <path d="M44 55 Q50 60 56 55" stroke={a} strokeWidth="2" fill="none" opacity="0.7" {...ROUND} />
-      <circle cx="50" cy="60" r="1.7" fill={a} opacity="0.7" />
+      <path d="M45 32 Q50 36.5 55 32" stroke={a} strokeWidth="2" fill="none" opacity="0.7" {...ROUND} />
+      <circle cx="50" cy="36.5" r="1.6" fill={a} opacity="0.7" />
       {/* waist sash */}
-      <path d="M42.5 66 Q50 69.5 57.5 66" stroke={a} strokeWidth="2.2" fill="none" opacity="0.6" {...ROUND} />
-      {/* skirt fold lines */}
-      <path d="M45 73 L38 86 M55 73 L62 86" stroke={a} strokeWidth="1.8" opacity="0.45" {...ROUND} />
+      <path d="M44 48 Q50 51 56 48" stroke={a} strokeWidth="2.2" fill="none" opacity="0.6" {...ROUND} />
+      {/* skirt folds */}
+      <path d="M44 58 L36.5 84 M50 56 L50 85 M56 58 L63.5 84" stroke={a} strokeWidth="1.8" opacity="0.5" {...ROUND} />
     </>
   ),
 
@@ -161,33 +162,38 @@ export const ICON_RENDERERS: Record<IconName, IconRenderer> = {
 
   sirena: (f, a) => (
     <>
-      {/* long flowing hair down the left side, two wavy tips */}
-      <path d="M48 8 Q34 6 31 18 Q30 28 26 40 Q22 52 28 62 Q31 53 36 47 Q34 58 40 64 Q43 54 42 42 Q40 30 41 20 Z" fill={f} />
+      {/* hair: long mass down the left, two separated wavy tips */}
+      <path d="M47 7 Q30 4 26 14 Q23 24 20 34 Q16 46 19 58 Q24 50 28 45 Q29 56 34 62 Q36 53 35 44 Q33 32 35 22 Q37 12 47 7 Z" fill={f} />
       {/* head */}
-      <circle cx="44" cy="20" r="9.5" fill={f} />
-      {/* face */}
-      <circle cx="40" cy="19" r="2" fill={a} />
-      <circle cx="48.5" cy="19" r="2" fill={a} />
-      <path d="M40 25 Q44 28 48 25" stroke={a} strokeWidth="1.8" fill="none" {...ROUND} />
+      <circle cx="41" cy="15" r="9" fill={f} />
+      {/* torso narrowing to pinched waist */}
+      <path d="M33 27 Q41 22 49 27 Q52 39 45 51 Q41 53 37 51 Q30 39 33 27 Z" fill={f} />
+      {/* tail: single thick sweep down-left then right to the stem */}
+      <path d="M37 51 C27 60 24 70 31 78 C39 86 54 87 63 81 Q67 78 69 73 L66 66 Q58 63 51 57 Q47 54 45 51 Z" fill={f} />
+      {/* large two-lobed fluke lifted upward with deep notch */}
+      <path d="M62 77 Q61 68 65 61 Q64 46 71 32 Q79 41 80 53 L80 56 Q87 45 95 42 Q93 57 84 65 Q76 72 64 77 Z" fill={f} />
       {/* raised arm with hand */}
-      <path d="M51 35 Q60 31 63.5 20" stroke={f} strokeWidth="6" fill="none" {...ROUND} />
-      <circle cx="64.5" cy="16" r="3.4" fill={f} />
-      {/* lower arm at side */}
-      <path d="M38 35 Q33 43 37 50" stroke={f} strokeWidth="5" fill="none" {...ROUND} />
-      {/* torso */}
-      <path d="M36 31 Q44 26 52 31 Q54 41 51 50 Q46 53 41 50 Q37 41 36 31 Z" fill={f} />
-      {/* tail curving down-left then sweeping right to a tapered tip */}
-      <path d="M40 50 Q30 60 34 70 Q40 80 53 81 Q62 83 69 79 Q60 71 56 61 Q53 54 51 50 Z" fill={f} />
-      {/* two-lobed fin */}
-      <path d="M61 72 Q73 63 88 56 Q86 70 73 77 Q86 80 91 92 Q76 93 63 84 Q58 77 61 72 Z" fill={f} />
-      {/* chest top line */}
-      <path d="M38 36 Q44 40 50 36" stroke={a} strokeWidth="1.8" fill="none" opacity="0.55" {...ROUND} />
-      {/* scale marks */}
-      <path d="M37 57 Q44 61 51 57 M39 66 Q47 70 55 66 M45 75 Q53 78 61 74" stroke={a} strokeWidth="1.8" fill="none" opacity="0.55" {...ROUND} />
+      <path d="M49 32 Q57 28 61 17" stroke={f} strokeWidth="6" fill="none" {...ROUND} />
+      <circle cx="62.5" cy="13" r="3.6" fill={f} />
+      {/* seam channel so lower arm separates from hair and torso */}
+      <path d="M36 30 Q31.5 40 36 50" stroke={a} strokeWidth="7.5" fill="none" {...ROUND} />
+      {/* lower arm resting down to the hip */}
+      <path d="M36 30 Q31.5 40 36 50" stroke={f} strokeWidth="4.6" fill="none" {...ROUND} />
+      {/* face */}
+      <circle cx="37.5" cy="14" r="2" fill={a} />
+      <circle cx="44.5" cy="14" r="2" fill={a} />
+      <path d="M38 20 Q41 22.5 44 20" stroke={a} strokeWidth="1.8" fill="none" {...ROUND} />
+      {/* waist seam marking skin-to-tail boundary */}
+      <path d="M37 50.5 Q41 53 45 50.5" stroke={a} strokeWidth="2.2" fill="none" opacity="0.8" {...ROUND} />
+      {/* two scale rows below the waist */}
+      <path d="M35 58 Q43 63 50 58.5 M32 67 Q43 73 55 68" stroke={a} strokeWidth="2" fill="none" opacity="0.55" {...ROUND} />
       {/* fin rays */}
-      <path d="M70 78 Q77 72 83 66 M70 81 Q77 84 85 88" stroke={a} strokeWidth="1.6" fill="none" opacity="0.5" {...ROUND} />
+      <path d="M70 60 Q73 47 72 37 M78 62 Q84 52 90 46" stroke={a} strokeWidth="1.8" fill="none" opacity="0.5" {...ROUND} />
       {/* hair strand */}
-      <path d="M35 14 Q31 26 29 40 Q27 50 31 57" stroke={a} strokeWidth="1.6" fill="none" opacity="0.5" {...ROUND} />
+      <path d="M29 14 Q25 30 24 44 Q23 52 25 56" stroke={a} strokeWidth="1.8" fill="none" opacity="0.5" {...ROUND} />
+      {/* waves */}
+      <path d="M6 88 Q11 82 16 88 Q21 94 26 88" stroke={f} strokeWidth="3" fill="none" {...ROUND} />
+      <path d="M74 92 Q80 86 86 92 Q91 96 95 92" stroke={f} strokeWidth="3" fill="none" {...ROUND} />
     </>
   ),
 
@@ -213,7 +219,7 @@ export const ICON_RENDERERS: Record<IconName, IconRenderer> = {
   barril: (f, a) => (
     <>
       <path d="M31 13 L69 13 Q82 30 82 50 Q82 70 69 87 L31 87 Q18 70 18 50 Q18 30 31 13 Z" fill={f} />
-      <path d="M14 25 L86 25 L86 32 L14 32 Z M14 68 L86 68 L86 75 L14 75 Z" fill={a} opacity="0.78" />
+      <path d="M23.5 25 L76.5 25 L79.5 32 L20.5 32 Z M20.5 68 L79.5 68 L77 75 L23 75 Z" fill={a} opacity="0.78" />
       <path d="M37 17 Q28 50 37 83 M50 14 L50 86 M63 17 Q72 50 63 83" stroke={a} strokeWidth="1.8" fill="none" opacity="0.55" {...ROUND} />
       <circle cx="50" cy="50" r="2.8" fill={a} />
     </>
@@ -307,14 +313,50 @@ export const ICON_RENDERERS: Record<IconName, IconRenderer> = {
 
   muerte: (f, a) => (
     <>
-      <path d="M80.5 32 L69 93" stroke={f} strokeWidth="5" {...ROUND} />
-      <path d="M84 30 Q79 9 52 6.5 Q26 6 11 18 Q37 14 57 19.5 Q73 24 78 36 Z" fill={f} />
-      <path d="M24 15 Q42 11.5 58 16.5" stroke={a} strokeWidth="1.6" fill="none" opacity="0.5" {...ROUND} />
-      <path d="M14.5 58.2 Q14.5 31 40 31 Q65.5 31 65.5 58.2 L65.5 70.1 Q65.5 76.9 58.7 76.9 L51.9 76.9 L51.9 87.1 L28.1 87.1 L28.1 76.9 L21.3 76.9 Q14.5 76.9 14.5 70.1 Z" fill={f} />
-      <ellipse cx="29.8" cy="58.2" rx="6.4" ry="7.2" fill={a} />
-      <ellipse cx="50.2" cy="58.2" rx="6.4" ry="7.2" fill={a} />
-      <path d="M35 70.1 L40 64.2 L45 70.1 Z" fill={a} />
-      <path d="M30.6 78.6 L30.6 87.1 M35.7 78.6 L35.7 87.1 M40.8 78.6 L40.8 87.1 M45.9 78.6 L45.9 87.1" stroke={a} strokeWidth="1.8" {...ROUND} />
+      {/* scythe shaft */}
+      <path d="M70 8 L60 92" stroke={f} strokeWidth="4.5" {...ROUND} />
+      {/* crescent blade attached to shaft top, tip hooking down-left over the head */}
+      <path d="M75 3.5 Q54 -2 38 5 Q26 11 23 26 Q29 11 46 8.5 Q60 6 71 12 Z" fill={f} />
+      {/* blade back-edge shading */}
+      <path d="M66 8 Q48 4.5 36 10" stroke={a} strokeWidth="1.6" fill="none" opacity="0.5" {...ROUND} />
+      {/* skull */}
+      <circle cx="41" cy="20" r="7.5" fill={f} />
+      {/* jaw */}
+      <path d="M36.5 26 L45.5 26 L45.5 29.5 Q45.5 31.5 41 31.5 Q36.5 31.5 36.5 29.5 Z" fill={f} />
+      <path d="M36.8 27.2 L45.2 27.2" stroke={a} strokeWidth="1.2" opacity="0.6" {...ROUND} />
+      {/* teeth */}
+      <path d="M39 28.3 L39 30.6 M41.3 28.3 L41.3 30.9 M43.6 28.3 L43.6 30.6" stroke={a} strokeWidth="1.2" opacity="0.6" {...ROUND} />
+      {/* eye sockets + nose notch */}
+      <circle cx="38.2" cy="19" r="2.1" fill={a} />
+      <circle cx="44" cy="19" r="2.1" fill={a} />
+      <path d="M41.2 20.8 L39.9 23.6 L42.5 23.6 Z" fill={a} />
+      {/* neck */}
+      <path d="M41 30.5 L41 35" stroke={f} strokeWidth="3.5" {...ROUND} />
+      {/* ribcage */}
+      <path d="M41 34 Q51 34 50 42 Q49 49 41 49.5 Q33 49 32 42 Q31 34 41 34 Z" fill={f} />
+      {/* rib gaps punched into the chest */}
+      <path d="M34 38.5 L48 38.5 M33.8 42 L48.2 42 M34.8 45.5 L47.2 45.5" stroke={a} strokeWidth="2" {...ROUND} />
+      {/* spine */}
+      <path d="M41 49.5 L41 57" stroke={f} strokeWidth="3.5" {...ROUND} />
+      {/* bow-tie pelvis with center seam */}
+      <path d="M32 56.5 C38 59.5 44 59.5 50 56.5 L50 66.5 C44 63.5 38 63.5 32 66.5 Z" fill={f} />
+      <path d="M41 58.5 L41 62" stroke={a} strokeWidth="1.5" opacity="0.55" {...ROUND} />
+      {/* right arm gripping shaft high */}
+      <path d="M48.5 35.5 L57 39.5 L67 33" stroke={f} strokeWidth="4" {...ROUND} />
+      <circle cx="48.5" cy="35.5" r="2.5" fill={f} />
+      <circle cx="57" cy="39.5" r="2.5" fill={f} />
+      <circle cx="67" cy="33" r="3" fill={f} />
+      {/* left arm gripping shaft low */}
+      <path d="M33.5 35.5 L27.5 52 L64.6 54" stroke={f} strokeWidth="4" {...ROUND} />
+      <circle cx="33.5" cy="35.5" r="2.5" fill={f} />
+      <circle cx="27.5" cy="52" r="2.5" fill={f} />
+      <circle cx="64.6" cy="54" r="3" fill={f} />
+      {/* striding left leg */}
+      <path d="M36 64.5 L31 76 L28 88 L21 90" stroke={f} strokeWidth="4" {...ROUND} />
+      <circle cx="31" cy="76" r="2.5" fill={f} />
+      {/* trailing right leg, foot kept clear of shaft */}
+      <path d="M46 64.5 L48.5 76 L49.5 88 L54.5 89.5" stroke={f} strokeWidth="4" {...ROUND} />
+      <circle cx="48.5" cy="76" r="2.5" fill={f} />
     </>
   ),
 
@@ -345,18 +387,29 @@ export const ICON_RENDERERS: Record<IconName, IconRenderer> = {
 
   bandolon: (f, a) => (
     <>
-      <circle cx="35" cy="67" r="25" fill={f} />
-      <path d="M38.3 56.3 L69.4 23.8 L76.6 30.7 L45.5 63.2 Z" fill={f} />
-      <path d="M67.2 23.2 L78.3 11.6 L88.5 21.2 L77.4 32.8 Z" fill={f} />
-      <circle cx="35" cy="67" r="9" fill="none" stroke={a} strokeWidth="3.8" opacity="0.8" />
-      <path d="M60.7 47.3 L53.5 40.4 M69 38.7 L61.8 31.8" stroke={a} strokeWidth="1.5" opacity="0.5" {...ROUND} />
-      <path d="M76.3 31 L69.1 24.1" stroke={a} strokeWidth="2" opacity="0.6" {...ROUND} />
-      <path d="M24.6 77.8 L73 27.2 M26.9 80 L75.3 29.4 M22.3 75.6 L70.7 25" stroke={a} strokeWidth="1.5" opacity="0.7" {...ROUND} />
-      <path d="M20.6 74 L28.6 81.6" stroke={a} strokeWidth="2.8" opacity="0.8" {...ROUND} />
-      <path d="M69.6 20.6 L66.7 17.9 M72.75 17.4 L69.9 14.6 M75.9 14.2 L73 11.4" stroke={f} strokeWidth="2.2" {...ROUND} />
-      <circle cx="65.6" cy="16.8" r="2.4" fill={f} />
-      <circle cx="68.8" cy="13.6" r="2.4" fill={f} />
-      <circle cx="71.9" cy="10.4" r="2.4" fill={f} />
+      <g transform="translate(-4 1) rotate(40 50 50) translate(50 50) scale(1.1) translate(-50 -50)">
+        {/* teardrop body */}
+        <path d="M44 30 C31 39 25 53 25 66 C25 81 36 91 50 91 C64 91 75 81 75 66 C75 53 69 39 56 30 Z" fill={f} />
+        {/* short neck */}
+        <rect x="44" y="13" width="12" height="20" fill={f} />
+        {/* headstock */}
+        <rect x="42" y="1" width="16" height="14" rx="4.5" fill={f} />
+        {/* tuning pegs, both sides */}
+        <circle cx="39.5" cy="5" r="2.6" fill={f} />
+        <circle cx="39.5" cy="11" r="2.6" fill={f} />
+        <circle cx="60.5" cy="5" r="2.6" fill={f} />
+        <circle cx="60.5" cy="11" r="2.6" fill={f} />
+        {/* nut seam */}
+        <path d="M44.5 16.5 L55.5 16.5" stroke={a} strokeWidth="2" opacity="0.7" {...ROUND} />
+        {/* sound hole */}
+        <circle cx="50" cy="54" r="7.5" fill={a} opacity="0.9" />
+        {/* strings */}
+        <path d="M46.5 18 L46.5 76 M50 18 L50 76 M53.5 18 L53.5 76" stroke={a} strokeWidth="1.5" opacity="0.55" {...ROUND} />
+        {/* bridge */}
+        <path d="M40 76.5 L60 76.5" stroke={a} strokeWidth="3.4" opacity="0.8" {...ROUND} />
+        {/* tailpiece */}
+        <path d="M46 85 L54 85" stroke={a} strokeWidth="2.4" opacity="0.55" {...ROUND} />
+      </g>
     </>
   ),
 
@@ -446,9 +499,20 @@ export const ICON_RENDERERS: Record<IconName, IconRenderer> = {
 
   mano: (f, a) => (
     <>
+      {/* palm + four fingers */}
       <path d="M30 57 L30 32 Q30 25 36 25 Q42 25 42 32 L42 48 L42 20 Q42 13 49 13 Q55 13 55 20 L55 48 L55 23 Q55 17 61 17 Q67 17 67 23 L67 49 L67 31 Q67 25 73 25 Q79 25 79 31 L79 58 Q79 84 54 91 Q32 86 28 66 Z" fill={f} />
+      {/* thumb: fat lobe merged into palm edge */}
+      <path d="M33 53 Q24 57 19 65" stroke={f} strokeWidth="11" {...ROUND} />
+      {/* cuff */}
+      <rect x="36" y="87" width="32" height="7.5" rx="2.5" fill={f} />
+      <path d="M38 87.5 L66 87.5" stroke={a} strokeWidth="1.8" opacity="0.6" {...ROUND} />
+      {/* palm creases */}
       <path d="M36 61 Q41 72 43 82 M46 56 Q49 72 50 86 M57 56 Q59 72 61 84 M69 62 Q67 73 64 82" stroke={a} strokeWidth="1.6" fill="none" opacity="0.55" {...ROUND} />
+      {/* finger seams */}
       <path d="M40 33 L40 48 M53 24 L53 48 M65 30 L65 49" stroke={a} strokeWidth="1.4" opacity="0.45" {...ROUND} />
+      {/* thumb crease */}
+      <path d="M32 51 Q28 55 26 60" stroke={a} strokeWidth="1.6" fill="none" opacity="0.5" {...ROUND} />
+      {/* palm dot */}
       <circle cx="54" cy="65" r="4" fill={a} opacity="0.36" />
     </>
   ),
@@ -566,18 +630,43 @@ export const ICON_RENDERERS: Record<IconName, IconRenderer> = {
 
   negrito: (f, a) => (
     <>
-      <ellipse cx="50" cy="37" rx="13" ry="13" fill={f} />
-      <path d="M33 90 L35.5 59 Q40.5 50.5 50 50.5 Q59.5 50.5 64.5 59 L67 90 L52 90 L50 85.5 L48 90 Z" fill={f} />
-      <ellipse cx="50" cy="24.5" rx="26.5" ry="5.8" fill={f} />
-      <path d="M36.5 25 L36.5 13 Q36.5 8.5 50 8.5 Q63.5 8.5 63.5 13 L63.5 25 Z" fill={f} />
-      <rect x="36.5" y="20.2" width="27" height="3.8" fill={a} opacity="0.55" />
-      {face(a, 50, 36, 'smile')}
-      <path d="M50 55.5 L43.6 52.2 L43.6 58.8 Z M50 55.5 L56.4 52.2 L56.4 58.8 Z" fill={a} />
-      <circle cx="50" cy="55.5" r="1.7" fill={a} />
-      <path d="M43 61 L50 68.5 L57 61" stroke={a} strokeWidth="2" fill="none" opacity="0.6" {...ROUND} />
-      <circle cx="50" cy="73" r="1.4" fill={a} opacity="0.7" />
-      <circle cx="50" cy="78.5" r="1.4" fill={a} opacity="0.7" />
-      <path d="M38.5 63 L37 87 M61.5 63 L63 87" stroke={a} strokeWidth="1.6" opacity="0.4" {...ROUND} />
+      {/* cane planted down-left */}
+      <path d="M26 45 L15.5 90" stroke={f} strokeWidth="4.2" {...ROUND} />
+      {/* arm reaching out to grip the cane */}
+      <path d="M40 39 Q32 41 26.5 48" stroke={f} strokeWidth="6" fill="none" {...ROUND} />
+      <circle cx="24.6" cy="51" r="4.2" fill={f} />
+      {/* other arm flung up, bent at the elbow */}
+      <path d="M58 38 Q68 33 72 25" stroke={f} strokeWidth="6" fill="none" {...ROUND} />
+      <circle cx="73" cy="22" r="4.2" fill={f} />
+      {/* planted leg + shoe */}
+      <path d="M45 63 L41 86" stroke={f} strokeWidth="7" {...ROUND} />
+      <ellipse cx="37" cy="88.5" rx="6.3" ry="3.1" fill={f} />
+      {/* kicked leg: bent knee, heel up */}
+      <path d="M53 63 L64 73 L72.5 62.5" stroke={f} strokeWidth="7" fill="none" {...ROUND} />
+      <ellipse cx="77" cy="57" rx="6.4" ry="3.2" fill={f} transform="rotate(-40 77 57)" />
+      {/* tilted fitted jacket with flared hem */}
+      <path d="M40 35 Q50 31.5 61 37.5 L57 56 Q58.5 61 56.5 64 L37.5 64 Q35.5 60 38.5 56 Z" fill={f} />
+      {/* head */}
+      <circle cx="46" cy="24" r="9" fill={f} />
+      {/* flat wide-brim hat with band */}
+      <g transform="rotate(-9 44 13)">
+        <ellipse cx="44" cy="13" rx="19" ry="4.2" fill={f} />
+        <path d="M33.5 13 L33.5 6.5 Q33.5 3.5 44 3.5 Q54.5 3.5 54.5 6.5 L54.5 13 Z" fill={f} />
+        <rect x="33.5" y="9.4" width="21" height="3.4" fill={a} opacity="0.55" />
+      </g>
+      {/* face */}
+      <circle cx="43" cy="23" r="2" fill={a} />
+      <circle cx="49.6" cy="23" r="2" fill={a} />
+      <path d="M43 27.5 Q46.3 31 49.6 27.5" stroke={a} strokeWidth="2" fill="none" {...ROUND} />
+      {/* bow tie */}
+      <path d="M48.5 38.5 L43 35.7 L43 41.3 Z M48.5 38.5 L54 35.7 L54 41.3 Z" fill={a} />
+      <circle cx="48.5" cy="38.5" r="1.5" fill={a} />
+      {/* jacket buttons */}
+      <circle cx="48.3" cy="47" r="1.6" fill={a} opacity="0.75" />
+      <circle cx="47.3" cy="55" r="1.6" fill={a} opacity="0.75" />
+      {/* trouser creases */}
+      <path d="M45 66 L42.5 83" stroke={a} strokeWidth="1.8" opacity="0.45" {...ROUND} />
+      <path d="M55 65.5 L61 70.5" stroke={a} strokeWidth="1.8" opacity="0.45" {...ROUND} />
     </>
   ),
 
@@ -585,7 +674,6 @@ export const ICON_RENDERERS: Record<IconName, IconRenderer> = {
     <>
       <path d="M50 86 Q14 62 14 36 Q14 18 31 18 Q44 18 50 33 Q56 18 69 18 Q86 18 86 36 Q86 62 50 86 Z" fill={f} />
       <path d="M25 32 Q27 26 33 25 Q37 27 34 32 Q29 34 25 32 Z" fill={a} opacity="0.36" />
-      <path d="M50 34 L50 78" stroke={a} strokeWidth="1.8" opacity="0.35" {...ROUND} />
     </>
   ),
 
@@ -696,14 +784,54 @@ export const ICON_RENDERERS: Record<IconName, IconRenderer> = {
 
   soldado: (f, a) => (
     <>
-      <path d="M30 18 Q30 8 50 8 Q70 8 70 18 Q70 23 64 23 L36 23 Q30 23 30 18 Z" fill={f} />
-      <rect x="31" y="23" width="38" height="6" rx="1" fill={f} />
-      {person(f, a, 'serious')}
-      <rect x="34" y="48" width="32" height="34" rx="3" fill={f} />
-      <path d="M40 54 L60 54 M40 61 L60 61" stroke={a} strokeWidth="1.5" opacity="0.58" {...ROUND} />
-      <path d="M76 12 L80 90" stroke={f} strokeWidth="4" {...ROUND} />
-      <path d="M76 12 L91 16 L76 22 Z" fill={f} />
-      <path d="M40 82 L40 94 M60 82 L60 94" stroke={f} strokeWidth="5" {...ROUND} />
+      {/* rifle stock - wide tapered quad, flared butt at bottom */}
+      <path d="M55.8 83.2 L64.2 86.6 L79.4 45.4 L73.8 43.2 Z" fill={f} />
+      {/* rifle barrel - thin upper stroke */}
+      <path d="M76.6 44.3 L87.2 18.3" stroke={f} strokeWidth="3" {...ROUND} />
+      {/* front-sight nub near muzzle */}
+      <circle cx="83.2" cy="21" r="1.7" fill={f} />
+      {/* bayonet tip */}
+      <path d="M87.8 16.7 L89.9 11.9" stroke={f} strokeWidth="2.6" {...ROUND} />
+      {/* trigger-guard nub below gripping hand */}
+      <circle cx="73.3" cy="62.3" r="2.6" fill={f} />
+      {/* sling line inside stock */}
+      <path d="M61.9 80.4 L75.1 48" stroke={a} strokeWidth="2" opacity="0.5" {...ROUND} />
+      {/* kepi cap */}
+      <path d="M28 21.5 L28 13 Q28 8.5 32.5 8.5 L47.5 8.5 Q52 8.5 52 13 L52 21.5 Z" fill={f} />
+      {/* short front visor */}
+      <path d="M49 17.5 L63 21 L49 24.5 Z" fill={f} />
+      {/* head */}
+      <circle cx="40" cy="27" r="12" fill={f} />
+      {/* cap seam */}
+      <path d="M29 21.5 L51.5 21.5" stroke={a} strokeWidth="2.2" opacity="0.65" {...ROUND} />
+      {/* cap badge */}
+      <circle cx="40" cy="14.5" r="2" fill={a} opacity="0.7" />
+      {/* face */}
+      <circle cx="35" cy="27.5" r="2.4" fill={a} />
+      <circle cx="45" cy="27.5" r="2.4" fill={a} />
+      <path d="M34.5 35.5 L45.5 35.5" stroke={a} strokeWidth="2.2" {...ROUND} />
+      {/* neck */}
+      <rect x="36" y="38" width="8" height="6" fill={f} />
+      {/* tunic */}
+      <path d="M29.5 45 Q29.5 42.5 33 42.5 L47 42.5 Q50.5 42.5 50.5 45 L53 72 L27 72 Z" fill={f} />
+      {/* left arm at attention */}
+      <path d="M30.5 46 L22 56.5 L23.5 68.5" stroke={f} strokeWidth="6" {...ROUND} />
+      <circle cx="24" cy="71" r="3.6" fill={f} />
+      {/* right arm gripping rifle */}
+      <path d="M50 47 L60 51.5 L67 54.5" stroke={f} strokeWidth="6" {...ROUND} />
+      <circle cx="69.8" cy="55.5" r="4" fill={f} />
+      {/* belt + buckle */}
+      <rect x="28.3" y="62.5" width="23.5" height="4" fill={a} opacity="0.7" />
+      <rect x="37.5" y="61.5" width="5.5" height="6" fill={f} />
+      {/* pocket dots */}
+      <circle cx="33.5" cy="52" r="1.9" fill={a} opacity="0.65" />
+      <circle cx="46.5" cy="52" r="1.9" fill={a} opacity="0.65" />
+      {/* trousers */}
+      <rect x="30" y="72" width="9" height="14.5" fill={f} />
+      <rect x="41.5" y="72" width="9" height="14.5" fill={f} />
+      {/* boots */}
+      <rect x="25.5" y="88" width="13" height="7.5" rx="3.5" fill={f} />
+      <rect x="41" y="88" width="13" height="7.5" rx="3.5" fill={f} />
     </>
   ),
 
@@ -745,10 +873,68 @@ export const ICON_RENDERERS: Record<IconName, IconRenderer> = {
 
   apache: (f, a) => (
     <>
-      <path d="M22 30 L18 8 L28 24 L30 6 L36 24 L42 8 L46 24 L50 10 L54 24 L58 8 L64 24 L70 6 L72 24 L82 8 L78 30 Z" fill={f} />
-      <path d="M26 27 Q50 34 74 27 L72 36 L28 36 Z" fill={f} />
-      {person(f, a, 'serious')}
-      <path d="M34 62 L50 78 L66 62 M42 66 L50 72 L58 66" stroke={a} strokeWidth="2" fill="none" opacity="0.58" {...ROUND} />
+      {/* war-bonnet fan: five quilled lozenge feathers rooted at (40,29) */}
+      <g transform="rotate(-50 40 29)">
+        <ellipse cx="40" cy="19.5" rx="5.4" ry="12" fill={f} />
+        <line x1="40" y1="25" x2="40" y2="10" stroke={a} strokeWidth="2" opacity="0.6" {...ROUND} />
+      </g>
+      <g transform="rotate(50 40 29)">
+        <ellipse cx="40" cy="19.5" rx="5.4" ry="12" fill={f} />
+        <line x1="40" y1="25" x2="40" y2="10" stroke={a} strokeWidth="2" opacity="0.6" {...ROUND} />
+      </g>
+      <g transform="rotate(-24 40 29)">
+        <ellipse cx="40" cy="17" rx="5.8" ry="13.5" fill={f} />
+        <line x1="40" y1="23" x2="40" y2="6.5" stroke={a} strokeWidth="2" opacity="0.6" {...ROUND} />
+      </g>
+      <g transform="rotate(24 40 29)">
+        <ellipse cx="40" cy="17" rx="5.8" ry="13.5" fill={f} />
+        <line x1="40" y1="23" x2="40" y2="6.5" stroke={a} strokeWidth="2" opacity="0.6" {...ROUND} />
+      </g>
+      <ellipse cx="40" cy="15.5" rx="6" ry="14.5" fill={f} />
+      <line x1="40" y1="22.5" x2="40" y2="4.5" stroke={a} strokeWidth="2" opacity="0.6" {...ROUND} />
+      {/* side-drop feathers hanging from the band ends */}
+      <g transform="rotate(16 21.5 40)">
+        <ellipse cx="21.5" cy="40" rx="3.4" ry="8" fill={f} />
+        <line x1="21.5" y1="36.5" x2="21.5" y2="45" stroke={a} strokeWidth="1.8" opacity="0.55" {...ROUND} />
+      </g>
+      <g transform="rotate(-16 58.5 40)">
+        <ellipse cx="58.5" cy="40" rx="3.4" ry="8" fill={f} />
+        <line x1="58.5" y1="36.5" x2="58.5" y2="45" stroke={a} strokeWidth="1.8" opacity="0.55" {...ROUND} />
+      </g>
+      {/* head */}
+      <ellipse cx="40" cy="44" rx="14" ry="13.5" fill={f} />
+      {/* headband with dots and bottom seam */}
+      <rect x="22.5" y="27" width="35" height="8.5" rx="4" fill={f} />
+      <path d="M27 35.5 L53 35.5" stroke={a} strokeWidth="1.8" opacity="0.5" {...ROUND} />
+      <circle cx="28.5" cy="31.2" r="1.9" fill={a} />
+      <circle cx="40" cy="31.2" r="1.9" fill={a} />
+      <circle cx="51.5" cy="31.2" r="1.9" fill={a} />
+      {/* face */}
+      <circle cx="34.5" cy="43.5" r="2.5" fill={a} />
+      <circle cx="45.5" cy="43.5" r="2.5" fill={a} />
+      <path d="M34.5 51.5 L45.5 51.5" stroke={a} strokeWidth="2.2" {...ROUND} />
+      {/* torso tunic */}
+      <path d="M29 81 L31.5 63 Q34.5 57 40 57 Q45.5 57 48.5 63 L51 81 Z" fill={f} />
+      {/* necklace V */}
+      <path d="M34.5 62 L40 69.5 L45.5 62" stroke={a} strokeWidth="2.2" fill="none" opacity="0.6" {...ROUND} />
+      {/* fringe ticks at hem */}
+      <path d="M34.5 76 L34.5 80.5 M40 76 L40 80.5 M45.5 76 L45.5 80.5" stroke={a} strokeWidth="1.8" opacity="0.55" {...ROUND} />
+      {/* left arm with hand and armband */}
+      <path d="M32.5 64 L21.5 79" stroke={f} strokeWidth="6" {...ROUND} />
+      <circle cx="21" cy="81.5" r="3.8" fill={f} />
+      <path d="M27.4 67.2 L31 69.8" stroke={a} strokeWidth="1.8" opacity="0.6" {...ROUND} />
+      {/* right arm reaching to bow grip, with armband */}
+      <path d="M48 64 Q65 60 84 55" stroke={f} strokeWidth="6" {...ROUND} />
+      <path d="M57.9 59 L58.9 64" stroke={a} strokeWidth="1.8" opacity="0.6" {...ROUND} />
+      {/* bow with string, hand gripping */}
+      <path d="M75 26 Q99 55 75 84" stroke={f} strokeWidth="4.2" fill="none" {...ROUND} />
+      <path d="M75 26 L75 84" stroke={f} strokeWidth="2.4" {...ROUND} />
+      <circle cx="86" cy="55" r="4" fill={f} />
+      {/* legs with feet and trouser fringe */}
+      <path d="M35.5 81 L34 91.5 M44.5 81 L46 91.5" stroke={f} strokeWidth="7.5" {...ROUND} />
+      <ellipse cx="32.5" cy="93.5" rx="5.5" ry="2.8" fill={f} />
+      <ellipse cx="47.5" cy="93.5" rx="5.5" ry="2.8" fill={f} />
+      <path d="M33.8 84 L33.8 87.5 M46.2 84 L46.2 87.5" stroke={a} strokeWidth="1.8" opacity="0.5" {...ROUND} />
     </>
   ),
 
@@ -965,14 +1151,14 @@ export const ICON_RENDERERS: Record<IconName, IconRenderer> = {
 
   chalupa: (f, a) => (
     <>
-      {/* paddle held diagonally, drawn first so figure overlaps it */}
-      <path d="M76 28 L46 66" stroke={f} strokeWidth="3.2" {...ROUND} />
-      <ellipse cx="79" cy="24" rx="5" ry="7" transform="rotate(38 79 24)" fill={f} />
+      {/* paddle held diagonally, drawn first so figure overlaps it; blade dips astern */}
+      <path d="M57 42 L87 88" stroke={f} strokeWidth="3.2" {...ROUND} />
+      <ellipse cx="89" cy="90" rx="5.5" ry="8" transform="rotate(43 89 90)" fill={f} />
 
       {/* seated human figure: torso */}
       <path d="M40 64 L42 44 Q50 38 58 44 L60 64 Z" fill={f} />
       {/* arm reaching to paddle */}
-      <path d="M55 50 Q64 50 70 44" stroke={f} strokeWidth="3.4" fill="none" {...ROUND} />
+      <path d="M53 47 Q60 49 65 55" stroke={f} strokeWidth="3.4" fill="none" {...ROUND} />
       {/* head */}
       <circle cx="49" cy="35" r="7" fill={f} />
       {/* wide sombrero: brim then rounded crown sitting on it */}
