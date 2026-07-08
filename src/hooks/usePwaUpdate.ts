@@ -15,7 +15,10 @@ export function usePwaUpdate(): UsePwaUpdateResult {
     if (updating) return;
     setUpdating(true);
     try {
-      await triggerPwaUpdate();
+      const reloading = await triggerPwaUpdate();
+      // A fresh version is still downloading; the page reloads on its own
+      // once it activates, so just re-enable the button.
+      if (!reloading) setUpdating(false);
     } catch {
       window.location.reload();
     }
