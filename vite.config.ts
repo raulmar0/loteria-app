@@ -5,6 +5,7 @@ import { readFileSync } from 'fs';
 import { resolve } from 'path';
 
 const pkg = JSON.parse(readFileSync(resolve(__dirname, 'package.json'), 'utf-8'));
+const manifest = JSON.parse(readFileSync(resolve(__dirname, 'public/manifest.json'), 'utf-8'));
 
 export default defineConfig({
   define: {
@@ -14,27 +15,17 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg'],
-      manifest: {
-        name: 'Lotería — El Cantor',
-        short_name: 'Cantor',
-        description: 'Cantor automático para la Lotería Mexicana',
-        theme_color: '#D62828',
-        background_color: '#FFF8E7',
-        display: 'standalone',
-        orientation: 'portrait',
-        start_url: '/',
-        icons: [
-          {
-            src: 'favicon.svg',
-            sizes: '192x192 512x512',
-            type: 'image/svg+xml',
-            purpose: 'any maskable',
-          },
-        ],
-      },
+      includeAssets: [
+        'favicon.ico',
+        'favicon-*.png',
+        'apple-touch-icon.png',
+        'icons/*.png',
+        'manifest.json',
+      ],
+      // Keep both existing manifest URLs in sync for previously installed apps.
+      manifest,
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,woff2}'],
+        globPatterns: ['**/*.{js,css,html,svg,webp,woff2}'],
         navigateFallback: 'index.html',
         navigateFallbackDenylist: [/^\/(api|_api)\//],
         cleanupOutdatedCaches: true,

@@ -1,4 +1,4 @@
-import { LoteriaIcon } from './LoteriaIcon';
+import { CardArtwork } from './CardArtwork';
 import { chooseIconFill } from '../lib/colorContrast';
 import type { Card, FontPair, Language, Palette } from '../types';
 
@@ -40,7 +40,7 @@ export function CardFace({ card, language, showVerse, palette, fonts, emptyLabel
 
         <div className="card-icon-wrap" style={{ background: `${card.color}15` }}>
           <div className="card-icon-bg" style={{ background: card.color }} />
-          <LoteriaIcon name={card.icon} color={iconColor} accent={card.color} size={180} />
+          <CardArtwork name={card.icon} color={iconColor} accent={card.color} />
         </div>
 
         <div className="card-name" style={{ fontFamily: fonts.head, color: card.color }}>{name}</div>
