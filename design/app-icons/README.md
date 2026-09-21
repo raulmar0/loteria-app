@@ -1,30 +1,35 @@
 # App icons
 
-Produced from the text-to-image prompts recorded below. The original full-size PNGs are kept here; production assets are resized PNG exports with no changes to the artwork.
+Generated with the built-in Image Gen tool. The selected retro microphone now sits in front of a moon lotería card, with the exact lowercase name `el cantor` underneath. The palette remains warm cream and dark forest green, with sage green inside the card.
+
+Original full-size PNGs are kept here; production assets are resized PNG exports with no changes to the artwork. `microphone-reference.png` preserves the approved microphone used as the input for this edit.
 
 | Source | Production exports |
 | --- | --- |
-| `pwa-source.png` | `public/icons/pwa-192.png`, `public/icons/pwa-512.png`, `public/apple-touch-icon.png` (180 × 180) |
-| `maskable-source.png` | `public/icons/pwa-maskable-512.png` |
-| `favicon-source.png` | `public/favicon-16.png`, `public/favicon-32.png`, `public/favicon.ico` (16, 32 and 48 pixels) |
+| `pwa-source.png` | `public/icons/pwa-cantor-192.png`, `public/icons/pwa-cantor-512.png`, `public/apple-touch-icon-cantor.png` (180 × 180) |
+| `maskable-source.png` | `public/icons/pwa-cantor-maskable-512.png` |
+| `favicon-source.png` | `public/favicon-cantor-16.png`, `public/favicon-cantor-32.png`, `public/favicon.ico` (16, 32 and 48 pixels) |
 
-The maskable variant includes extra red space around the entire rooster for launcher cropping. The favicon uses a simplified rooster head to stay legible in browser tabs.
+The maskable variant adds green space around the complete design, including the name, for launcher cropping. The favicon preserves the microphone and background card with simpler shapes; the wording stays in the larger PWA and Apple icons because it cannot be legible in a 16-pixel browser tab. New PNG filenames allow browsers and launchers to discover the replacement artwork without reusing previous icon URLs. The conventional `favicon.ico` fallback also contains the new design.
 
 `public/manifest.json` is the single source for the manifest used in development and production. Vite PWA also generates `manifest.webmanifest` from it to preserve both existing manifest URLs for previously installed apps, and precaches the manifests and production icons. Original source artwork stays outside `public/` and is not shipped to browsers.
 
-## PWA generation prompt
+## PWA edit prompt
+
+Edit target: `microphone-reference.png`.
 
 ```text
-Use case: logo-brand
-Asset type: production PWA app icon for "Lotería — El Cantor", a Mexican lotería card caller app.
-Primary request: Create one beautiful original square app icon: a bold, friendly Mexican folk-art rooster, the recognizable "el gallo" lotería subject and a natural symbol for a caller. Deliver the actual icon artwork, not a mockup.
-Scene/backdrop: completely opaque flat fiesta-red #D62828 background extending to all four square edges; no rounded outside corners, no white margins.
-Subject: one stylized cream rooster in side profile facing right, proud upright singing pose with a gently open golden beak, clear comb, single dark eye, elegant sweeping green tail and minimal golden details. Use a compact unified silhouette, chunky shapes, confident dark #1A1410 outlines. The rooster is the sole focal point. No card rectangle around it.
-Style/medium: polished contemporary Mexican folk print, bold flat cut-paper shapes, precise smooth edges, playful but refined; subtle hand-crafted shape character without fine texture. High contrast, memorable at small sizes.
-Color palette: red #D62828 full-bleed background; warm cream #FFF8E7 primary silhouette; green #1F8A5B and golden yellow #FFB703 restrained accents; dark ink #1A1410 for eye and outlines.
-Composition/framing: perfectly square 1024 by 1024; optically centered compact rooster fitting entirely within a central circle of diameter 76% of canvas width so its comb, beak, tail and feet survive circular app-icon masking; visually balanced plain red breathing room. Let the rooster fill this safe circle generously.
-Text: none.
-Constraints: one single finished icon only. Original illustration. No typography, letters, numbers, tiny decorative details, extra objects, border frames, gradients, photorealism, 3D bevel, drop shadows, device mockup, icon sheet, watermark or corner rounding.
+Use case: precise-object-edit
+Asset type: final PWA icon for a Mexican lotería caller.
+Input image: edit target, the approved cream retro microphone on a forest-green square.
+Primary request: Add the exact words "el cantor" below the microphone, and add ONE lotería card behind the microphone. Preserve the chosen microphone identity and the old-radio aesthetic.
+Foreground: keep the same upright rounded retro microphone, paired horizontal dark-green grille openings, cream U-shaped yoke, short stem and rounded base. Scale it down enough to fit the new composition, without redesigning its silhouette.
+Background card: one recognizable portrait Mexican lotería card, tilted slightly counterclockwise behind the upright microphone. Warm ivory paper with a dark forest-green inset printed border and a muted sage-green inner field. A small original simple crescent-moon illustration may peek out at the exposed upper-left corner of the card; most of the card's central art is naturally hidden by the microphone. Give the cream microphone a clean forest-green separation edge where necessary so it reads clearly in front of the card. Only one card, no fan or stack. This is an original folk-print card, not a reproduction of a commercial deck.
+Typography: beneath the microphone and card, on the green background, centered bold warm-cream retro slab-serif lettering on ONE straight line. Exact text, all lowercase: "el cantor". Spell it e-l, a space, c-a-n-t-o-r. The text must be large, beautifully spaced, crisp and legible, about 62% of the canvas width. This is the only visible wording anywhere in the artwork; no card title or card number.
+Layout: square canvas. The card and microphone occupy the upper central portion, and "el cantor" forms a clear separate baseline below them with a comfortable gap. Keep generous outer margins; no object or letter touches an edge. The entire combined design fits within about 74% of canvas width and 78% of height.
+Palette: deep forest green #153C34 full-bleed opaque background, warm cream #FFF3D6 microphone and letters, muted sage green only within the card. Preserve the established colors and flat graphic style.
+Background must be a COMPLETELY OPAQUE GREEN SQUARE including all corners; the colored square is part of the artwork, never a transparent cutout.
+Constraints: polished flat vintage graphic, simple clean silhouettes, no photorealism, gradients, glossy metal, 3D, drop shadows, grain, mockups, extra labels, decorative stars, rooster, watermarks or rounded outer canvas corners. Deliver one finished square icon.
 ```
 
 ## Favicon generation prompt
@@ -33,15 +38,14 @@ Reference image: `pwa-source.png`.
 
 ```text
 Use case: logo-brand
-Asset type: favicon for the same Mexican lotería caller app as the attached PWA rooster icon.
-Input image: reference for brand identity, palette and illustration style.
-Primary request: Create ONE square finished favicon artwork as a highly simplified close-up of this same singing rooster's head and upper neck, facing right. The favicon must remain recognizable at 16 by 16 pixels. This is a new companion asset derived from the attached illustration.
-Subject: a single bold cream rooster head and cropped neck, a compact three-lobed red comb outlined in thick dark ink, one large solid dark circular eye with NO highlight, a golden open beak and one simple red wattle. Keep the head silhouette extremely simple and chunky. Do not include the body, feet, wings, tail, feather lines or fine decorative details.
-Scene/backdrop: opaque uniform red #D62828 extending all the way to every square edge. No transparency and no rounded outside corners.
-Style: same friendly flat Mexican folk graphic as reference, reduced to very few thick confident shapes for tiny browser tabs; completely flat solid colors, no grain.
-Composition: square 1024 by 1024, large centered head with total head+comb+neck silhouette occupying roughly 80% of width and 82% of height, 9% margin on all sides. Beak points right. Optically balanced.
-Palette: warm cream #FFF8E7, fiesta red #D62828, golden yellow #FFB703, dark ink #1A1410.
-Constraints: no text, numbers, letters, frame, extra decorations, gradients, texture, cast shadows, photorealism, 3D, device mockup or contact sheet. One single finished favicon tile only.
+Asset type: browser favicon companion to the provided "el cantor" app icon.
+Input image: reference for the approved cream retro microphone, moon lotería card and dark-green palette.
+Primary request: Adapt the microphone and single background lotería card to an extremely small 16x16 pixel browser tab icon. Preserve the same identity but simplify the artwork to bold recognizable silhouettes.
+Design: one large upright cream retro microphone in front of ONE slightly counterclockwise tilted cream-edged lotería card with a sage-green interior. The card peeks out visibly to the upper-left. The microphone head has only THREE pairs of thick dark-green grille openings; short cream yoke and a short stem with a small base. Use strong dark-green separation between the microphone and card. Reduce the moon on the card to one simple crescent with no face or fine detail.
+The favicon is the compact pictorial mark: omit the wordmark in this tiny variant so the microphone and card are legible at 16 pixels. The main PWA image retains the full wording.
+Composition: square, centered compact mark about 70% of canvas width and 80% of height. Flat two-tone cream and green with sage only inside the card, thick forms, generous negative space, crisp edges.
+Background: the ENTIRE canvas is a COMPLETELY OPAQUE forest-green #153C34 square, including every corner and interior gap. The green tile is part of the artwork, not a transparent cutout.
+Constraints: no typography, extra cards, rooster, stars, extra objects, textures, shading, gradients, thin lines, transparent pixels, outer rounded corners, mockup or watermark. One finished square favicon only.
 ```
 
 ## Maskable generation prompt
@@ -50,10 +54,11 @@ Edit target: `pwa-source.png`.
 
 ```text
 Use case: precise-object-edit
-Asset type: maskable Android PWA icon variant.
-Input image: edit target, the full-body rooster app icon.
-Primary request: Change only the framing: zoom OUT substantially so the entire unchanged rooster is much smaller and centered, surrounded by a wide uninterrupted red background on every side. Keep the existing rooster illustration, shapes, details, colors, pose and direction exactly the same. Do not crop any body part.
-Composition: square canvas. The full rooster including comb, beak, tail and feet must fit inside the central 58% of the canvas width and central 64% of height. That means at least 18% empty red space ABOVE AND BELOW and at least 21% empty red space LEFT AND RIGHT. It must fit fully inside a centered circular safe area with radius 38% of canvas width. Do not draw the circle.
-Background: extend the original red background smoothly all the way to each square edge. Completely opaque, no transparency, no outer rounded corners, no frames.
-Constraints: identical rooster artwork, only smaller scale and more empty red breathing room. No extra objects, no text, no new decoration, no mockup. Deliver one finished square icon.
+Asset type: Android maskable variant of the provided "el cantor" microphone-and-card app icon.
+Input image: edit target.
+Primary request: Change ONLY scale and framing. Keep the exact cream microphone, moon lotería card behind it, forest-green/sage/cream palette, and the exact lowercase words "el cantor" below. Reduce the size of the complete design and center it on a larger uninterrupted green field.
+The ENTIRE composition including every letter and every card corner must fit inside an invisible centered circle with diameter 76% of canvas width. In particular, the leftmost "e" and rightmost "r" at the bottom must have ample space from the circular crop. Aim for the full composition to span about 50% of canvas width and 60% of height. Do not draw the safe-area circle.
+Preserve all relative layout and proportions from the reference. Keep a clear gap between the microphone base and the wording. Text exactly: "el cantor", on one line, fully visible and unchanged.
+The ENTIRE square background is COMPLETELY OPAQUE forest green #153C34 with no alpha or transparent areas; extend it seamlessly to all four corners. The square green background is part of the artwork.
+Constraints: no new decoration, no new wording, no spelling or case changes, no removal of the moon card, no outer rounded corners, no mockup. One finished square icon.
 ```
