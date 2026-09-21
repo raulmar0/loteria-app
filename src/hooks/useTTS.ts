@@ -6,8 +6,14 @@ interface UseTTSOpts {
   language: Language;
 }
 
+interface SpeakOptions {
+  onEnd?: () => void;
+  /** Speak even when the voice setting is off (used by the audio previews). */
+  force?: boolean;
+}
+
 interface UseTTSResult {
-  speak: (text: string, options?: { onEnd?: () => void }) => boolean;
+  speak: (text: string, options?: SpeakOptions) => boolean;
   cancel: () => void;
   ready: boolean;
   supported: boolean;
@@ -60,8 +66,9 @@ export function useTTS({ enabled, language }: UseTTSOpts): UseTTSResult {
   }, [supported]);
 
   const speak = useCallback(
-    (text: string, options?: { onEnd?: () => void }) => {
-      if (!supported || !enabled || !text) return false;
+    (text: string, options?: SpeakOptions) => {
+      if (!supported || !text) return false;
+      if (!enabled && !options?.force) return false;
       try {
         const synth = window.speechSynthesis;
         synth.cancel();

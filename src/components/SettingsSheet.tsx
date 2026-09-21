@@ -11,6 +11,7 @@ interface Props {
   setTweak: <K extends keyof Tweaks>(key: K, value: Tweaks[K]) => void;
   onResetDeck: () => void;
   canResetDeck: boolean;
+  onOpenAudio: () => void;
   canInstallPwa: boolean;
   installingPwa: boolean;
   onInstallPwa: () => void;
@@ -29,6 +30,9 @@ interface Props {
     voiceUnsupported: string;
     verses: string;
     versesDesc: string;
+    customAudio: string;
+    customAudioDesc: string;
+    customAudioButton: string;
     speed: string;
     language: string;
     installApp: string;
@@ -52,6 +56,7 @@ export function SettingsSheet({
   setTweak,
   onResetDeck,
   canResetDeck,
+  onOpenAudio,
   canInstallPwa,
   installingPwa,
   onInstallPwa,
@@ -108,6 +113,36 @@ export function SettingsSheet({
           onColor={palette.accent2}
           label={labels.verses}
         />
+      </div>
+
+      <div className="setting-row">
+        <div className="setting-info">
+          <div className="setting-label" style={{ fontFamily: fonts.head }}>{labels.customAudio}</div>
+          <div className="setting-desc" style={{ fontFamily: fonts.body }}>{labels.customAudioDesc}</div>
+        </div>
+        <button
+          type="button"
+          className="setting-action-btn"
+          onClick={onOpenAudio}
+          style={{ fontFamily: fonts.head, backgroundColor: palette.accent3, color: palette.ink }}
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <rect x="9" y="2" width="6" height="11" rx="3" />
+            <path d="M5 11v1a7 7 0 0 0 14 0v-1" />
+            <line x1="12" y1="19" x2="12" y2="22" />
+          </svg>
+          {labels.customAudioButton}
+        </button>
       </div>
 
       <div className="setting-row col">

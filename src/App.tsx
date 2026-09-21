@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
 import { AppHeader } from './components/AppHeader';
+import { AudioSheet } from './components/AudioSheet';
 import { CardFace } from './components/CardFace';
 import { ConfirmDialog } from './components/ConfirmDialog';
 import { CountdownBar } from './components/CountdownBar';
@@ -11,14 +12,17 @@ import { PapelPicado } from './components/PapelPicado';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { PwaInstallBanner } from './components/PwaInstallBanner';
 import { SettingsSheet } from './components/SettingsSheet';
+import { LOTERIA_CARDS } from './data/cards';
 import { FONTS } from './data/fonts';
 import { PALETTES } from './data/palettes';
 import { SPEEDS } from './data/speeds';
+import { useCardAudio } from './hooks/useCardAudio';
 import { useDeck } from './hooks/useDeck';
 import { usePwaInstallPrompt } from './hooks/usePwaInstallPrompt';
 import { usePwaUpdate } from './hooks/usePwaUpdate';
 import { useTTS } from './hooks/useTTS';
 import { useTweaks } from './hooks/useTweaks';
+import { INTRO_AUDIO_KEY, countCardClips } from './lib/cardAudio';
 import { makeT } from './lib/i18n';
 import type { Card } from './types';
 
@@ -37,6 +41,8 @@ export function App() {
     enabled: tweaks.voice,
     language,
   });
+  const cardAudio = useCardAudio({ enabled: tweaks.voice && tweaks.customAudio });
+  const { play: playClip, stop: stopClip, prime: primeAudio, has: hasClip } = cardAudio;
   const { canInstall: canInstallPwa, showIosHint: showIosInstallHint, installing: installingPwa, install: installPwa } = usePwaInstallPrompt();
   const { supported: canUpdatePwa, updating: updatingPwa, update: updatePwa } = usePwaUpdate();
 
@@ -44,6 +50,7 @@ export function App() {
   const [timerNowMs, setTimerNowMs] = useState(() => performance.now());
   const [showHistory, setShowHistory] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showAudio, setShowAudio] = useState(false);
   const [showRestartConfirm, setShowRestartConfirm] = useState(false);
   const [introPending, setIntroPending] = useState(false);
   const lastCallAtRef = useRef(0);
@@ -67,12 +74,19 @@ export function App() {
     [language, tweaks.verses]
   );
 
+  // A card's own clip wins over the system voice; everything else falls back.
   const speakCard = useCallback(
     (card: Card) => {
+      if (playClip(card.n)) return;
       speak(buildText(card));
     },
-    [speak, buildText]
+    [playClip, speak, buildText]
   );
+
+  const stopVoice = useCallback(() => {
+    cancelSpeech();
+    stopClip();
+  }, [cancelSpeech, stopClip]);
 
   const clearPendingSpeech = useCallback(() => {
     if (speechDelayRef.current === null) return;
@@ -131,20 +145,23 @@ export function App() {
       }
     };
 
-    if (language !== 'es') {
+    // The spoken intro is a Spanish tradition, but a recorded one is the
+    // caller's own voice — play it whatever the language is set to.
+    const hasIntroClip = hasClip(INTRO_AUDIO_KEY);
+    if (language !== 'es' && !hasIntroClip) {
       callFirstCard();
       return;
     }
 
     setIntroPending(true);
-    const didSpeakIntro = speak(FIRST_CALL_INTRO_ES, {
-      onEnd: callFirstCard,
-    });
+    const introStarted =
+      playClip(INTRO_AUDIO_KEY, { onEnd: callFirstCard })
+      || speak(FIRST_CALL_INTRO_ES, { onEnd: callFirstCard });
 
-    if (!didSpeakIntro) {
+    if (!introStarted) {
       callFirstCard();
     }
-  }, [introPending, language, speak]);
+  }, [introPending, language, speak, playClip, hasClip]);
 
   // Auto-mode: pause-aware timer.
   // - First play (no cards yet): draw immediately, then start one clock loop.
@@ -234,9 +251,9 @@ export function App() {
     () => () => {
       cancelPendingIntro(false);
       clearPendingSpeech();
-      cancelSpeech();
+      stopVoice();
     },
-    [cancelPendingIntro, cancelSpeech, clearPendingSpeech]
+    [cancelPendingIntro, stopVoice, clearPendingSpeech]
   );
 
   // Handlers
@@ -255,7 +272,7 @@ export function App() {
     const now = performance.now();
     cancelPendingIntro();
     clearPendingSpeech();
-    cancelSpeech();
+    stopVoice();
     resetDeck();
     lastCallAtRef.current = 0;
     pausedAtRef.current = null;
@@ -266,10 +283,12 @@ export function App() {
     setShowHistory(false);
     setShowSettings(false);
     setShowRestartConfirm(false);
-  }, [cancelPendingIntro, cancelSpeech, clearPendingSpeech, resetDeck]);
+  }, [cancelPendingIntro, stopVoice, clearPendingSpeech, resetDeck]);
 
   const handleTogglePlay = () => {
     if (introPending) return;
+    // Unlock clip playback while we are still inside the user's tap.
+    primeAudio();
     if (deck.length === 0 && called.length > 0) {
       handleRequestRestart();
       return;
@@ -283,6 +302,7 @@ export function App() {
 
   const handleNext = () => {
     if (introPending) return;
+    primeAudio();
     if (deck.length === 0) return;
     if (called.length === 0) {
       startFirstCallSequence(false);
@@ -299,17 +319,38 @@ export function App() {
 
   const handleOpenHistory = () => {
     cancelPendingIntro();
-    cancelSpeech();
+    stopVoice();
     setRunning(false);
     setShowHistory(true);
   };
 
   const handleOpenSettings = () => {
     cancelPendingIntro();
-    cancelSpeech();
+    stopVoice();
     setRunning(false);
     setShowSettings(true);
   };
+
+  const handleOpenAudio = () => {
+    cancelPendingIntro();
+    stopVoice();
+    setRunning(false);
+    setShowSettings(false);
+    setShowAudio(true);
+  };
+
+  // Preview with the system voice, for rows that have no clip of their own.
+  const handlePreviewVoice = useCallback(
+    (key: number) => {
+      if (key === INTRO_AUDIO_KEY) {
+        speak(FIRST_CALL_INTRO_ES, { force: true });
+        return;
+      }
+      const card = LOTERIA_CARDS.find(c => c.n === key);
+      if (card) speak(buildText(card), { force: true });
+    },
+    [speak, buildText]
+  );
 
   const handleToggleLanguage = () => {
     setTweak('language', language === 'es' ? 'en' : 'es');
@@ -322,6 +363,9 @@ export function App() {
     ? Math.max(0, Math.ceil((intervalMs - elapsedMs) / 1000))
     : SPEEDS[tweaks.speed].seconds;
   const progressPct = running ? Math.min(100, Math.max(0, (elapsedMs / intervalMs) * 100)) : 0;
+
+  const cardsWithClips = countCardClips(cardAudio.clips, LOTERIA_CARDS);
+  const storedClipCount = Object.keys(cardAudio.clips).length;
 
   const primaryMode: 'call' | 'pause' | 'resume' | 'restart' =
     deck.length === 0 && called.length > 0
@@ -370,10 +414,13 @@ export function App() {
       <AppHeader
         language={language}
         onToggleLanguage={handleToggleLanguage}
+        onOpenAudio={handleOpenAudio}
         onOpenSettings={handleOpenSettings}
         fonts={fonts}
         brandSub={t('El cantor', 'The Caller')}
         langButtonLabel={t('Cambiar idioma', 'Toggle language')}
+        audioButtonLabel={t('Mis audios', 'My audio')}
+        audioClipCount={storedClipCount}
         settingsButtonLabel={t('Ajustes', 'Settings')}
       />
 
@@ -407,7 +454,11 @@ export function App() {
           showVerse={tweaks.verses}
           palette={palette}
           fonts={fonts}
-          emptyLabel={introPending ? 'corre y se va corriendo con' : t('Listo para cantar', 'Ready to call')}
+          emptyLabel={
+            introPending
+              ? t('corre y se va corriendo con', 'here it comes')
+              : t('Listo para cantar', 'Ready to call')
+          }
         />
 
         {running && (
@@ -468,6 +519,7 @@ export function App() {
         setTweak={setTweak}
         onResetDeck={handleRequestRestart}
         canResetDeck={called.length > 0}
+        onOpenAudio={handleOpenAudio}
         canInstallPwa={canInstallPwa}
         installingPwa={installingPwa}
         onInstallPwa={() => { void installPwa(); }}
@@ -492,6 +544,14 @@ export function App() {
             'Mostrar y leer los versos tradicionales',
             'Show and read traditional verses'
           ),
+          customAudio: t('Mis audios', 'My audio'),
+          customAudioDesc: cardsWithClips > 0
+            ? t(
+                `${cardsWithClips} de ${LOTERIA_CARDS.length} cartas con voz propia`,
+                `${cardsWithClips} of ${LOTERIA_CARDS.length} cards with your own voice`
+              )
+            : t('Graba o sube tu voz por carta', 'Record or upload your voice per card'),
+          customAudioButton: t('Gestionar', 'Manage'),
           speed: t('Velocidad', 'Speed'),
           language: t('Idioma', 'Language'),
           installApp: t('Instalar app', 'Install app'),
@@ -509,6 +569,19 @@ export function App() {
           about: t('Acerca de', 'About'),
           aboutDesc: t('Lotería — El Cantor', 'Lotería — The Caller'),
         }}
+      />
+
+      <AudioSheet
+        open={showAudio}
+        onClose={() => setShowAudio(false)}
+        audio={cardAudio}
+        language={language}
+        useCustom={tweaks.customAudio}
+        onToggleUseCustom={value => setTweak('customAudio', value)}
+        voiceOn={tweaks.voice && ttsSupported}
+        onPreviewVoice={handlePreviewVoice}
+        palette={palette}
+        fonts={fonts}
       />
 
       <ConfirmDialog

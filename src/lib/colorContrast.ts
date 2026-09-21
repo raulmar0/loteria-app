@@ -45,6 +45,20 @@ export function contrastRatio(a: string, b: string): number {
   return (lighter + 0.05) / (darker + 0.05);
 }
 
+const LIGHT_TEXT = '#FFFFFF';
+const DARK_TEXT = '#1A1410';
+
+/**
+ * Picks white or near-black for text sitting on an arbitrary colour. Unlike
+ * `chooseIconFill` this ignores the palette: a card's own colour can be as
+ * pale as the skull's cream, and the theme ink is light in dark palettes.
+ */
+export function readableTextOn(background: string): string {
+  return contrastRatio(background, LIGHT_TEXT) >= contrastRatio(background, DARK_TEXT)
+    ? LIGHT_TEXT
+    : DARK_TEXT;
+}
+
 export function chooseIconFill(background: string, primary: string, fallback: string): string {
   if (contrastRatio(background, primary) >= MIN_ICON_CONTRAST) {
     return primary;

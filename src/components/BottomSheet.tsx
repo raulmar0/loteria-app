@@ -6,10 +6,12 @@ interface Props {
   title: string;
   titleFont: string;
   closeLabel: string;
+  /** `tall` gives list-heavy sheets more room than the default 75%. */
+  size?: 'default' | 'tall';
   children: ReactNode;
 }
 
-export function BottomSheet({ open, onClose, title, titleFont, closeLabel, children }: Props) {
+export function BottomSheet({ open, onClose, title, titleFont, closeLabel, size = 'default', children }: Props) {
   const sheetRef = useRef<HTMLDivElement | null>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
 
@@ -39,7 +41,7 @@ export function BottomSheet({ open, onClose, title, titleFont, closeLabel, child
   return (
     <div className="sheet-backdrop" onClick={onClose} role="presentation">
       <div
-        className="sheet"
+        className={`sheet${size === 'tall' ? ' sheet-tall' : ''}`}
         ref={sheetRef}
         tabIndex={-1}
         role="dialog"

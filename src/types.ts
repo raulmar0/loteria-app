@@ -51,6 +51,28 @@ export interface SpeedDef {
 
 export type Language = 'es' | 'en';
 
+/** Where a custom clip came from: recorded with the mic or picked from a file. */
+export type AudioSource = 'recording' | 'file';
+
+/**
+ * Everything about a custom clip except the audio itself. Kept apart from the
+ * blob so the whole collection can be listed without loading any audio.
+ */
+export interface CardAudioMeta {
+  /** Card number, or `INTRO_AUDIO_KEY` (0) for the caller's intro line. */
+  key: number;
+  mime: string;
+  bytes: number;
+  /** 0 when the browser could not report a duration. */
+  durationMs: number;
+  source: AudioSource;
+  /** Original file name for uploads, empty for recordings. */
+  name: string;
+  updatedAt: number;
+}
+
+export type CardAudioMap = Record<number, CardAudioMeta>;
+
 export interface Tweaks {
   palette: PaletteKey;
   font: FontKey;
@@ -58,6 +80,7 @@ export interface Tweaks {
   verses: boolean;
   speed: SpeedKey;
   language: Language;
+  customAudio: boolean;
 }
 
 export const TWEAK_DEFAULTS: Tweaks = {
@@ -67,4 +90,5 @@ export const TWEAK_DEFAULTS: Tweaks = {
   verses: false,
   speed: 'medio',
   language: 'es',
+  customAudio: true,
 };

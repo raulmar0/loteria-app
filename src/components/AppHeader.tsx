@@ -3,20 +3,27 @@ import type { FontPair, Language } from '../types';
 interface Props {
   language: Language;
   onToggleLanguage: () => void;
+  onOpenAudio: () => void;
   onOpenSettings: () => void;
   fonts: FontPair;
   brandSub: string;
   langButtonLabel: string;
+  audioButtonLabel: string;
+  /** How many clips are stored, shown as a dot on the audio button. */
+  audioClipCount: number;
   settingsButtonLabel: string;
 }
 
 export function AppHeader({
   language,
   onToggleLanguage,
+  onOpenAudio,
   onOpenSettings,
   fonts,
   brandSub,
   langButtonLabel,
+  audioButtonLabel,
+  audioClipCount,
   settingsButtonLabel,
 }: Props) {
   return (
@@ -32,6 +39,15 @@ export function AppHeader({
         <button type="button" className="icon-btn" onClick={onToggleLanguage} aria-label={langButtonLabel}>
           <span style={{ fontFamily: fonts.head, fontSize: 14 }}>{language.toUpperCase()}</span>
         </button>
+        <button type="button" className="icon-btn" onClick={onOpenAudio} aria-label={audioButtonLabel}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <rect x="9" y="2" width="6" height="11" rx="3"/>
+            <path d="M5 11v1a7 7 0 0 0 14 0v-1"/>
+            <line x1="12" y1="19" x2="12" y2="22"/>
+          </svg>
+          {audioClipCount > 0 && <span className="icon-btn-dot" aria-hidden="true" />}
+        </button>
+
         <button type="button" className="icon-btn" onClick={onOpenSettings} aria-label={settingsButtonLabel}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="3"/>
