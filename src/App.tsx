@@ -461,15 +461,15 @@ export function App() {
           }
         />
 
-        {running && (
-          <CountdownBar
-            progressPct={progressPct}
-            secondsLeft={secondsLeft}
-            palette={palette}
-            fonts={fonts}
-            label={t('Siguiente en', 'Next in')}
-          />
-        )}
+        <CountdownBar
+          visible={running}
+          cycleKey={current?.n}
+          progressPct={progressPct}
+          secondsLeft={secondsLeft}
+          palette={palette}
+          fonts={fonts}
+          label={t('Siguiente en', 'Next in')}
+        />
 
         <Controls
           primaryMode={primaryMode}

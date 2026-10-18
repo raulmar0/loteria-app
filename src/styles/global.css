@@ -81,12 +81,14 @@ body {
   transform-origin: top center;
   filter: drop-shadow(0 2px 2px rgba(0,0,0,0.1));
 }
-.papel-flag:nth-child(2) { animation-delay: 0.3s; }
-.papel-flag:nth-child(3) { animation-delay: 0.6s; }
-.papel-flag:nth-child(4) { animation-delay: 0.9s; }
-.papel-flag:nth-child(5) { animation-delay: 1.2s; }
-.papel-flag:nth-child(6) { animation-delay: 1.5s; }
-.papel-flag:nth-child(7) { animation-delay: 1.8s; }
+/* Negative delays start each flag mid-sway (same 0.3s lag per flag as a
+   positive delay) so none sits still and then snaps to -2deg on load. */
+.papel-flag:nth-child(2) { animation-delay: -3.7s; }
+.papel-flag:nth-child(3) { animation-delay: -3.4s; }
+.papel-flag:nth-child(4) { animation-delay: -3.1s; }
+.papel-flag:nth-child(5) { animation-delay: -2.8s; }
+.papel-flag:nth-child(6) { animation-delay: -2.5s; }
+.papel-flag:nth-child(7) { animation-delay: -2.2s; }
 @keyframes sway {
   0%, 100% { transform: rotate(-2deg); }
   50% { transform: rotate(2deg); }
@@ -377,6 +379,16 @@ body {
 .card-empty-text { font-size: 14px; color: var(--ink-soft); letter-spacing: 0.05em; text-transform: uppercase; font-weight: 600; }
 
 /* ----- Countdown ----- */
+.countdown-slot {
+  display: grid;
+  grid-template-rows: 0fr;
+  /* Cancel .app-main's 14px gap while collapsed so the card fills it. */
+  margin-top: -14px;
+  opacity: 0;
+  transition: grid-template-rows 0.25s ease, margin-top 0.25s ease, opacity 0.2s ease;
+}
+.countdown-slot.open { grid-template-rows: 1fr; margin-top: 0; opacity: 1; }
+.countdown-slot-inner { min-height: 0; overflow: hidden; }
 .countdown-bar {
   position: relative;
   height: 36px;
@@ -483,9 +495,11 @@ body {
   z-index: 50;
   display: flex;
   align-items: flex-end;
-  animation: fadeIn 0.2s;
+  animation: backdropIn 0.2s ease-out;
 }
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+/* Fade only the dim colour so the sheet or dialog inside stays opaque. */
+@keyframes backdropIn { from { background-color: rgba(0,0,0,0); } }
+@keyframes backdropOut { to { background-color: rgba(0,0,0,0); } }
 .sheet {
   width: 100%;
   background: var(--paper);
@@ -498,7 +512,12 @@ body {
   animation: sheetUp 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
   box-shadow: 0 -8px 0 var(--ink);
 }
-@keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+/* +8px hides the top shadow too when the sheet is fully below the screen. */
+@keyframes sheetUp { from { transform: translateY(calc(100% + 8px)); } to { transform: translateY(0); } }
+@keyframes sheetDown { from { transform: translateY(0); } to { transform: translateY(calc(100% + 8px)); } }
+/* Exit = entrance reversed. Duration must match SHEET_EXIT_MS (BottomSheet.tsx). */
+.sheet-backdrop.closing { animation: backdropOut 0.22s ease-in forwards; pointer-events: none; }
+.sheet-backdrop.closing .sheet { animation: sheetDown 0.22s cubic-bezier(0.4, 0, 1, 1) forwards; }
 .sheet-handle {
   width: 40px;
   height: 4px;
@@ -698,8 +717,13 @@ body {
   place-items: center;
   padding: 24px;
   background: rgba(0,0,0,0.55);
-  animation: fadeIn 0.2s;
+  animation: backdropIn 0.2s ease-out;
 }
+/* Exit = entrance reversed. Duration must match DIALOG_EXIT_MS (ConfirmDialog.tsx). */
+.confirm-backdrop.closing { animation: backdropOut 0.16s ease-in forwards; pointer-events: none; }
+.confirm-backdrop.closing .confirm-dialog { animation: dialogOut 0.16s ease-in forwards; }
+@keyframes dialogIn { from { opacity: 0; transform: scale(0.94); } }
+@keyframes dialogOut { to { opacity: 0; transform: scale(0.94); } }
 .confirm-dialog {
   width: min(100%, 360px);
   background: var(--paper);
@@ -707,6 +731,7 @@ body {
   border-radius: 16px;
   box-shadow: 6px 6px 0 var(--ink);
   padding: 22px 18px 18px;
+  animation: dialogIn 0.22s cubic-bezier(0.34, 1.3, 0.64, 1);
   color: var(--ink);
 }
 .confirm-dialog h2 {
@@ -749,10 +774,20 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .papel-flag { animation: none; }
   .card-face { animation: none; }
-  .sheet { animation: none; }
-  .sheet-backdrop { animation: none; }
-  .confirm-backdrop { animation: none; }
-  .countdown-fill { transition: none; }
+  .sheet,
+  .sheet-backdrop,
+  .sheet-backdrop.closing,
+  .sheet-backdrop.closing .sheet { animation: none; }
+  .confirm-backdrop,
+  .confirm-dialog,
+  .confirm-backdrop.closing,
+  .confirm-backdrop.closing .confirm-dialog { animation: none; }
+  .countdown-fill,
+  .countdown-slot { transition: none; }
+  /* Fade the offline banner in place instead of sliding it. The attribute
+     selector outranks the .network-status rule declared further down. */
+  .network-status[data-online] { transition: opacity 200ms ease; }
+  .switch-thumb { transition: none; }
 }
 
 /* ----- Network status indicator ----- */

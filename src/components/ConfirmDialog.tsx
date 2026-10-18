@@ -1,5 +1,9 @@
 import { useEffect, useId, useRef } from 'react';
+import { usePresence } from '../hooks/usePresence';
 import type { FontPair, Palette } from '../types';
+
+// Keep in sync with the `.confirm-backdrop.closing` animations in global.css.
+const DIALOG_EXIT_MS = 160;
 
 interface Props {
   open: boolean;
@@ -28,6 +32,7 @@ export function ConfirmDialog({
   const messageId = useId();
   const cancelRef = useRef<HTMLButtonElement | null>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+  const { mounted, closing } = usePresence(open, DIALOG_EXIT_MS);
 
   useEffect(() => {
     if (!open) return;
@@ -41,7 +46,7 @@ export function ConfirmDialog({
     };
 
     document.addEventListener('keydown', onKey);
-    cancelRef.current?.focus();
+    cancelRef.current?.focus({ preventScroll: true });
 
     return () => {
       document.removeEventListener('keydown', onKey);
@@ -49,10 +54,15 @@ export function ConfirmDialog({
     };
   }, [open, onCancel]);
 
-  if (!open) return null;
+  if (!mounted) return null;
 
   return (
-    <div className="confirm-backdrop" role="presentation" onClick={onCancel}>
+    <div
+      className={`confirm-backdrop${closing ? ' closing' : ''}`}
+      role="presentation"
+      onClick={onCancel}
+      aria-hidden={closing || undefined}
+    >
       <div
         className="confirm-dialog"
         role="alertdialog"

@@ -1,4 +1,8 @@
 import { useEffect, useRef, type ReactNode } from 'react';
+import { usePresence } from '../hooks/usePresence';
+
+// Keep in sync with the `.sheet-backdrop.closing` animations in global.css.
+const SHEET_EXIT_MS = 220;
 
 interface Props {
   open: boolean;
@@ -14,6 +18,7 @@ interface Props {
 export function BottomSheet({ open, onClose, title, titleFont, closeLabel, size = 'default', children }: Props) {
   const sheetRef = useRef<HTMLDivElement | null>(null);
   const previousFocusRef = useRef<HTMLElement | null>(null);
+  const { mounted, closing } = usePresence(open, SHEET_EXIT_MS);
 
   useEffect(() => {
     if (!open) return;
@@ -27,8 +32,11 @@ export function BottomSheet({ open, onClose, title, titleFont, closeLabel, size 
     };
     document.addEventListener('keydown', onKey);
 
-    // Focus the sheet itself for screen readers
-    sheetRef.current?.focus();
+    // Focus the sheet itself for screen readers. preventScroll: the sheet starts
+    // below the screen, and a scroll-into-view would drag the whole app up
+    // (.app-root is overflow:hidden but still scrollable) instead of letting
+    // the sheet slide in.
+    sheetRef.current?.focus({ preventScroll: true });
 
     return () => {
       document.removeEventListener('keydown', onKey);
@@ -36,10 +44,15 @@ export function BottomSheet({ open, onClose, title, titleFont, closeLabel, size 
     };
   }, [open, onClose]);
 
-  if (!open) return null;
+  if (!mounted) return null;
 
   return (
-    <div className="sheet-backdrop" onClick={onClose} role="presentation">
+    <div
+      className={`sheet-backdrop${closing ? ' closing' : ''}`}
+      onClick={onClose}
+      role="presentation"
+      aria-hidden={closing || undefined}
+    >
       <div
         className={`sheet${size === 'tall' ? ' sheet-tall' : ''}`}
         ref={sheetRef}
