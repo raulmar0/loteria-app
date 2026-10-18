@@ -8,6 +8,8 @@ const pkg = JSON.parse(readFileSync(resolve(__dirname, 'package.json'), 'utf-8')
 const manifest = JSON.parse(readFileSync(resolve(__dirname, 'public/manifest.json'), 'utf-8'));
 
 export default defineConfig({
+  // Served from GitHub Pages at https://raulmar0.github.io/loteria-app/
+  base: '/loteria-app/',
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
   },
