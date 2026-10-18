@@ -13,8 +13,5 @@ dist-ssr
 .env.local
 .env.*.local
 
-.vercel
-
-
 # Generated icon audit page
 icon-audit.html
