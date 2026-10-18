@@ -1,6 +1,11 @@
 {
   "redirects": [
     {
+      "source": "/",
+      "destination": "https://raulmar0.github.io/loteria-app/",
+      "permanent": false
+    },
+    {
       "source": "/:path*",
       "destination": "https://raulmar0.github.io/loteria-app/:path*",
       "permanent": false
