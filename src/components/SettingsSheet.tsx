@@ -7,6 +7,10 @@ import type { FontPair, Language, Palette, SpeedKey, Tweaks } from '../types';
 // Author credit. The brand is always lowercase and never translated.
 const CREDIT_NAME = 'apolar';
 const CREDIT_URL = 'https://apolar.co/';
+// apolar's logo mark (viewBox 0 0 100 100): a circle split by a rising
+// diagonal gap. It goes right before the name, in the link's colour.
+const CREDIT_MARK_PATH =
+  'M14.8 74.5L80.88 20.23A6.18 6.18 0 0 0 80.75 10.58A50 50 0 0 0 5.35 72.51A6.18 6.18 0 0 0 14.8 74.5ZM86.31 27.85L21.22 81.31A6.18 6.18 0 0 0 21.64 91.18A50 50 0 0 0 95.9 30.18A6.18 6.18 0 0 0 86.31 27.85Z';
 
 interface Props {
   open: boolean;
@@ -270,6 +274,15 @@ export function SettingsSheet({
           <div className="setting-desc" style={{ fontFamily: fonts.body }}>
             {labels.madeBy}{' '}
             <a className="setting-link" href={CREDIT_URL} target="_blank" rel="noopener noreferrer">
+              <svg
+                className="setting-link__mark"
+                viewBox="0 0 100 100"
+                fill="currentColor"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path d={CREDIT_MARK_PATH} />
+              </svg>
               {CREDIT_NAME}
               <span className="setting-link__stop" aria-hidden="true">•</span>
               <span className="visually-hidden"> {labels.opensInNewTab}</span>

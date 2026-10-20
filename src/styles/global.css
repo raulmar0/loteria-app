@@ -631,9 +631,25 @@ body {
   font-size: 1.15em;
   letter-spacing: -0.085em;
   line-height: 1;
+  white-space: nowrap;
   color: var(--ink);
   text-decoration: none;
   border-radius: 2px;
+}
+/* The logo mark leads the name. On the baseline (inline SVG default), its top
+   meets the top of the "l" and its bottom overshoots the baseline like the
+   "o" does; the margin leaves an optical 0.2em to the "a". The link doesn't
+   wrap, so a narrow line breaks before the mark, never between it and the
+   name. The circle touches the edges of its viewBox, so overflow stays
+   visible: the browser's default clip, snapped to whole pixels, would flatten
+   its edge. */
+.setting-link__mark {
+  width: 0.72em;
+  height: 0.72em;
+  margin-inline-end: 0.16em;
+  position: relative;
+  top: 0.01em;
+  overflow: visible;
 }
 /* The logo's full stop is a bullet set smaller than the letters. */
 .setting-link__stop { font-size: 0.74em; }
