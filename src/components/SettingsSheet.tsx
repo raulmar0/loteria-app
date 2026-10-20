@@ -271,6 +271,7 @@ export function SettingsSheet({
             {labels.madeBy}{' '}
             <a className="setting-link" href={CREDIT_URL} target="_blank" rel="noopener noreferrer">
               {CREDIT_NAME}
+              <span className="setting-link__stop" aria-hidden="true">•</span>
               <span className="visually-hidden"> {labels.opensInNewTab}</span>
             </a>
           </div>
