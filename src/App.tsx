@@ -568,6 +568,9 @@ export function App() {
           resetDeck: t('Reiniciar mazo', 'Reset deck'),
           about: t('Acerca de', 'About'),
           aboutDesc: t('Lotería — El Cantor', 'Lotería — The Caller'),
+          // Feminine: the copy calls the app "la app".
+          madeBy: t('Hecha por', 'Made by'),
+          opensInNewTab: t('(se abre en una pestaña nueva)', '(opens in a new tab)'),
         }}
       />
 

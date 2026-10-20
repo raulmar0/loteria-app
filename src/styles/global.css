@@ -613,6 +613,16 @@ body {
 }
 .ios-install-hint .ios-share-icon { flex-shrink: 0; color: var(--accent); }
 .setting-version { font-size: 13px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+/* Inline text link inside secondary copy. Keep the underline: ink and
+   ink-soft are too close to tell the link apart by colour alone. */
+.setting-link {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+  border-radius: 2px;
+}
+.setting-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .switch {
   position: relative;
   width: 52px; height: 30px;

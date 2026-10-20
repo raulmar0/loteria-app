@@ -4,6 +4,10 @@ import { Switch } from './Switch';
 import { SPEEDS } from '../data/speeds';
 import type { FontPair, Language, Palette, SpeedKey, Tweaks } from '../types';
 
+// Author credit. The brand is always lowercase and never translated.
+const CREDIT_NAME = 'apolar';
+const CREDIT_URL = 'https://apolar.co/';
+
 interface Props {
   open: boolean;
   onClose: () => void;
@@ -46,6 +50,8 @@ interface Props {
     resetDeck: string;
     about: string;
     aboutDesc: string;
+    madeBy: string;
+    opensInNewTab: string;
   };
 }
 
@@ -261,6 +267,13 @@ export function SettingsSheet({
         <div className="setting-info">
           <div className="setting-label" style={{ fontFamily: fonts.head }}>{labels.about}</div>
           <div className="setting-desc" style={{ fontFamily: fonts.body }}>{labels.aboutDesc}</div>
+          <div className="setting-desc" style={{ fontFamily: fonts.body }}>
+            {labels.madeBy}{' '}
+            <a className="setting-link" href={CREDIT_URL} target="_blank" rel="noopener noreferrer">
+              {CREDIT_NAME}
+              <span className="visually-hidden"> {labels.opensInNewTab}</span>
+            </a>
+          </div>
         </div>
         <div className="setting-version" style={{ fontFamily: fonts.body }}>v{__APP_VERSION__}</div>
       </div>
