@@ -1,9 +1,10 @@
-import { useCallback, useMemo, useRef, useState, type ChangeEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { AudioRow, type AudioRowLabels, type AudioRowState } from './AudioRow';
 import { BottomSheet } from './BottomSheet';
 import { Segmented } from './Segmented';
 import { Switch } from './Switch';
 import { LOTERIA_CARDS } from '../data/cards';
+import { trackEvent } from '../lib/analytics';
 import {
   INTRO_AUDIO_KEY,
   MAX_CLIP_BYTES,
@@ -20,6 +21,16 @@ import { makeT } from '../lib/i18n';
 import type { UseCardAudioResult } from '../hooks/useCardAudio';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import type { FontPair, Language, Palette } from '../types';
+
+function clipFields(key: number): { clip: 'intro' | 'card'; card: number } {
+  return { clip: key === INTRO_AUDIO_KEY ? 'intro' : 'card', card: key };
+}
+
+/** `audio/webm;codecs=opus` -> `audio/webm`. Anything odd becomes `unknown`. */
+function mimeGroup(mime: string): string {
+  const base = mime.split(';')[0]?.trim().toLowerCase() ?? '';
+  return /^[\w.+-]+\/[\w.+-]+$/.test(base) ? base : 'unknown';
+}
 
 interface Props {
   open: boolean;
@@ -68,7 +79,17 @@ export function AudioSheet({
     (key: number, blob: Blob, durationMs: number) => {
       setBusyKey(key);
       void save(key, blob, { source: 'recording', name: '', durationMs })
-        .then(err => setError(err))
+        .then(err => {
+          setError(err);
+          if (err) return;
+          trackEvent('audio_saved', {
+            ...clipFields(key),
+            source: 'recording',
+            duration_s: Math.max(0, Math.round(durationMs / 1000)),
+            bytes: blob.size,
+            mime: mimeGroup(blob.type),
+          });
+        })
         .finally(() => setBusyKey(null));
     },
     [save]
@@ -81,6 +102,17 @@ export function AudioSheet({
     setError(null);
     recorder.clearError();
   }, [recorder]);
+
+  const reportedError = useRef<CardAudioError | null>(null);
+  useEffect(() => {
+    if (!activeError) {
+      reportedError.current = null;
+      return;
+    }
+    if (reportedError.current === activeError) return;
+    reportedError.current = activeError;
+    trackEvent('audio_error', { error: activeError });
+  }, [activeError]);
 
   const visibleCards = useMemo(
     () => filterCards(LOTERIA_CARDS, { query, filter, clips, keep: keepKey }),
@@ -97,7 +129,9 @@ export function AudioSheet({
       dismissError();
       prime();
       setConfirmKey(null);
-      if (!play(key, { force: true })) onPreviewVoice(key);
+      const playedClip = play(key, { force: true });
+      trackEvent('audio_played', { ...clipFields(key), via: playedClip ? 'clip' : 'tts' });
+      if (!playedClip) onPreviewVoice(key);
     },
     [dismissError, onPreviewVoice, play, prime]
   );
@@ -109,6 +143,7 @@ export function AudioSheet({
       setConfirmKey(null);
       setKeepKey(key);
       recorder.start(key);
+      trackEvent('audio_record_start', clipFields(key));
     },
     [dismissError, recorder, stop]
   );
@@ -142,8 +177,15 @@ export function AudioSheet({
 
       setKeepKey(key);
       setBusyKey(key);
+      const bytes = file.size;
+      const mime = mimeGroup(file.type);
       void save(key, file, { source: 'file', name: file.name, durationMs: 0 })
-        .then(err => setError(err))
+        .then(err => {
+          setError(err);
+          if (err) return;
+          // The file name stays on the device. Only the type and size leave.
+          trackEvent('audio_saved', { ...clipFields(key), source: 'file', bytes, mime });
+        })
         .finally(() => setBusyKey(null));
     },
     [save]
@@ -155,20 +197,30 @@ export function AudioSheet({
       setKeepKey(key);
       setBusyKey(key);
       void remove(key)
-        .then(err => setError(err))
+        .then(err => {
+          setError(err);
+          if (!err) trackEvent('audio_deleted', clipFields(key));
+        })
         .finally(() => setBusyKey(null));
     },
     [remove]
   );
 
   const handleClearAll = useCallback(() => {
+    const count = storedCount;
     setConfirmClearAll(false);
     setConfirmKey(null);
     setKeepKey(null);
-    void clearAll().then(err => setError(err));
-  }, [clearAll]);
+    void clearAll().then(err => {
+      setError(err);
+      if (!err) trackEvent('audio_cleared', { count });
+    });
+  }, [clearAll, storedCount]);
 
   const handleClose = useCallback(() => {
+    if (recorder.recordingKey !== null) {
+      trackEvent('audio_record_discard', { ...clipFields(recorder.recordingKey), reason: 'close' });
+    }
     recorder.cancel();
     stop();
     setConfirmKey(null);
@@ -218,11 +270,20 @@ export function AudioSheet({
     onStopPlay: stop,
     onStartRecord: () => handleStartRecord(key),
     onSaveRecording: recorder.stop,
-    onDiscardRecording: recorder.cancel,
+    onDiscardRecording: () => {
+      trackEvent('audio_record_discard', { ...clipFields(key), reason: 'button' });
+      recorder.cancel();
+    },
     onUpload: () => handleUploadClick(key),
-    onAskDelete: () => setConfirmKey(key),
+    onAskDelete: () => {
+      trackEvent('audio_delete_ask', clipFields(key));
+      setConfirmKey(key);
+    },
     onConfirmDelete: () => handleDelete(key),
-    onCancelDelete: () => setConfirmKey(null),
+    onCancelDelete: () => {
+      trackEvent('audio_delete_cancel', clipFields(key));
+      setConfirmKey(null);
+    },
   });
 
   return (
@@ -283,7 +344,10 @@ export function AudioSheet({
               type="button"
               className="audio-link-btn"
               style={{ fontFamily: fonts.body, color: palette.accent }}
-              onClick={() => setConfirmClearAll(true)}
+              onClick={() => {
+                trackEvent('audio_clear_ask', { count: storedCount });
+                setConfirmClearAll(true);
+              }}
             >
               {t('Borrar todos', 'Delete all')}
             </button>
@@ -315,7 +379,10 @@ export function AudioSheet({
                 type="button"
                 className="audio-mini-btn"
                 style={{ fontFamily: fonts.head }}
-                onClick={() => setConfirmClearAll(false)}
+                onClick={() => {
+                  trackEvent('audio_clear_cancel', { count: storedCount });
+                  setConfirmClearAll(false);
+                }}
               >
                 {t('Cancelar', 'Cancel')}
               </button>
@@ -409,6 +476,7 @@ export function AudioSheet({
               // Re-querying the list is deliberate: drop the pinned row.
               setFilter(value);
               setKeepKey(null);
+              trackEvent('audio_filter', { filter: value });
             }}
             fontBody={fonts.body}
           />

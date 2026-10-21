@@ -39,9 +39,49 @@
       }
     </style>
     <title>Lotería — El Cantor</title>
+    <!-- Queue events that fire before the Simple Analytics script arrives. -->
+    <script>
+      window.sa_event = window.sa_event || function () {
+        var args = [].slice.call(arguments);
+        window.sa_event.q ? window.sa_event.q.push(args) : (window.sa_event.q = [args]);
+      };
+      window.__saContext = window.__saContext || {};
+      // Event fields win over the shared visit context when a key overlaps.
+      window.saCollectMetadata = function (data) {
+        var ctx = window.__saContext || {};
+        var out = {};
+        for (var key in ctx) {
+          if (!Object.prototype.hasOwnProperty.call(ctx, key)) continue;
+          if (data && data[key] != null) continue;
+          out[key] = ctx[key];
+        }
+        return out;
+      };
+    </script>
   </head>
   <body>
     <div id="root"></div>
+    <!--
+      The app module runs first and fills __saContext. These two are deferred,
+      in order, so the page view already carries that context. Do Not Track
+      visits are included. Auto events cover outbound links, mailto clicks,
+      and file downloads. Time on page, scroll, referrer, campaign, device,
+      and screen size come from latest.js itself.
+    -->
     <script type="module" src="/src/main.tsx"></script>
+    <script
+      defer
+      data-collect-dnt="true"
+      data-metadata-collector="saCollectMetadata"
+      src="https://scripts.simpleanalyticscdn.com/latest.js"
+    ></script>
+    <script
+      defer
+      data-collect="outbound,emails,downloads"
+      data-extensions="pdf,csv,docx,xlsx,zip,doc,xls,txt,json,png,svg,webp,gif,jpg,jpeg,mp3,wav,m4a,ogg,webm,aac"
+      data-use-title="true"
+      data-full-urls="true"
+      src="https://scripts.simpleanalyticscdn.com/auto-events.js"
+    ></script>
   </body>
 </html>

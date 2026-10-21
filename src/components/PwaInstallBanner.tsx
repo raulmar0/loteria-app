@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { trackEvent } from '../lib/analytics';
 import type { PwaInstallOutcome } from '../lib/pwaInstall';
 import type { FontPair } from '../types';
 
@@ -31,7 +32,7 @@ export function PwaInstallBanner({
     }
   });
 
-  const handleDismiss = () => {
+  const hideBanner = () => {
     setDismissed(true);
     try {
       window.localStorage.setItem(DISMISSED_KEY, 'true');
@@ -40,11 +41,16 @@ export function PwaInstallBanner({
     }
   };
 
+  const handleDismiss = () => {
+    hideBanner();
+    trackEvent('pwa_banner_dismiss');
+  };
+
   const handleInstall = async () => {
     const outcome = await onInstall();
 
     if (outcome === 'accepted') {
-      handleDismiss();
+      hideBanner();
     }
   };
 

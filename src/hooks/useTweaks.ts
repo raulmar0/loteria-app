@@ -3,7 +3,7 @@ import { TWEAK_DEFAULTS, type Tweaks } from '../types';
 
 const STORAGE_KEY = 'loteria.tweaks.v1';
 
-function readStored(): Tweaks {
+export function loadTweaks(): Tweaks {
   if (typeof localStorage === 'undefined') return TWEAK_DEFAULTS;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -16,7 +16,7 @@ function readStored(): Tweaks {
 }
 
 export function useTweaks() {
-  const [tweaks, setTweaks] = useState<Tweaks>(readStored);
+  const [tweaks, setTweaks] = useState<Tweaks>(loadTweaks);
 
   useEffect(() => {
     try {

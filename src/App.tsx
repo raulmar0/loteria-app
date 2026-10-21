@@ -22,12 +22,26 @@ import { usePwaInstallPrompt } from './hooks/usePwaInstallPrompt';
 import { usePwaUpdate } from './hooks/usePwaUpdate';
 import { useTTS } from './hooks/useTTS';
 import { useTweaks } from './hooks/useTweaks';
+import { publishAnalyticsContext, publishAppAnalytics, trackEvent, trackOnce } from './lib/analytics';
 import { INTRO_AUDIO_KEY, countCardClips } from './lib/cardAudio';
 import { makeT } from './lib/i18n';
-import type { Card } from './types';
+import type { Card, Tweaks } from './types';
 
 const TIMER_REFRESH_MS = 100;
 const FIRST_CALL_INTRO_ES = 'corre y se va corriendo con:';
+
+type CallSource = 'auto' | 'manual' | 'first_auto' | 'first_manual';
+type PauseReason = 'button' | 'history' | 'settings' | 'audio' | 'restart';
+
+const TWEAK_CONTEXT_KEY: Record<keyof Tweaks, string> = {
+  palette: 'palette',
+  font: 'font',
+  voice: 'voice',
+  verses: 'verses',
+  speed: 'speed',
+  language: 'ui_language',
+  customAudio: 'custom_audio',
+};
 
 export function App() {
   const { tweaks, setTweak } = useTweaks();
@@ -55,6 +69,8 @@ export function App() {
   const [introPending, setIntroPending] = useState(false);
   const lastCallAtRef = useRef(0);
   const pausedAtRef = useRef<number | null>(null);
+  const gameStartedAtRef = useRef<number | null>(null);
+  const restartWasRunningRef = useRef(false);
   const hasCalledRef = useRef(false);
   const hiddenAtRef = useRef<number | null>(null);
   const speechDelayRef = useRef<number | null>(null);
@@ -105,18 +121,56 @@ export function App() {
     [clearPendingSpeech, speakCard]
   );
 
+  const gameElapsed = useCallback((): number => {
+    if (gameStartedAtRef.current === null) return 0;
+    return Math.max(0, Math.round((performance.now() - gameStartedAtRef.current) / 1000));
+  }, []);
+
+  const voiceFor = useCallback((card: Card): 'off' | 'clip' | 'tts' | 'silent' => {
+    if (!tweaks.voice) return 'off';
+    if (tweaks.customAudio && hasClip(card.n)) return 'clip';
+    return ttsSupported ? 'tts' : 'silent';
+  }, [hasClip, tweaks.customAudio, tweaks.voice, ttsSupported]);
+
   // Draw + speak one card; stop running when deck is empty.
-  const tick = useCallback((callAtMs = performance.now()): boolean => {
+  const tick = useCallback((callAtMs = performance.now(), source: CallSource = 'auto'): boolean => {
     const card = callNext();
     if (!card) {
       setRunning(false);
       return false;
     }
+    if (gameStartedAtRef.current === null) gameStartedAtRef.current = callAtMs;
+    const position = called.length + 1;
+    const finished = position >= total;
+    const remainingCards = Math.max(0, deck.length - 1);
     lastCallAtRef.current = callAtMs;
     setTimerNowMs(callAtMs);
     scheduleSpeech(card);
+    publishAnalyticsContext({
+      cards_called: position,
+      cards_remaining: remainingCards,
+      intro_pending: false,
+      game_running: source === 'auto' || source === 'first_auto' || running,
+    });
+    trackEvent('card_called', {
+      card: card.n,
+      name: card.icon,
+      position,
+      remaining: remainingCards,
+      source,
+      announcer: voiceFor(card),
+      finished,
+      elapsed_s: gameElapsed(),
+    });
+    if (finished) {
+      trackEvent('game_complete', {
+        cards_called: position,
+        elapsed_s: gameElapsed(),
+        source,
+      });
+    }
     return true;
-  }, [callNext, scheduleSpeech]);
+  }, [callNext, called.length, deck.length, gameElapsed, running, scheduleSpeech, total, voiceFor]);
 
   // Keep a stable ref to the latest tick so timer callbacks always see current closure.
   const tickRef = useRef(tick);
@@ -132,6 +186,9 @@ export function App() {
   const startFirstCallSequence = useCallback((autoRun: boolean) => {
     if (introPending) return;
 
+    if (gameStartedAtRef.current === null) gameStartedAtRef.current = performance.now();
+    trackEvent('game_start', { mode: autoRun ? 'auto' : 'manual' });
+
     const sequence = introSequenceRef.current + 1;
     introSequenceRef.current = sequence;
 
@@ -140,7 +197,7 @@ export function App() {
 
       setIntroPending(false);
       const now = performance.now();
-      if (tickRef.current(now) && autoRun) {
+      if (tickRef.current(now, autoRun ? 'first_auto' : 'first_manual') && autoRun) {
         setRunning(true);
       }
     };
@@ -149,18 +206,23 @@ export function App() {
     // caller's own voice — play it whatever the language is set to.
     const hasIntroClip = hasClip(INTRO_AUDIO_KEY);
     if (language !== 'es' && !hasIntroClip) {
+      trackEvent('intro_skipped', { reason: 'language' });
       callFirstCard();
       return;
     }
 
     setIntroPending(true);
-    const introStarted =
-      playClip(INTRO_AUDIO_KEY, { onEnd: callFirstCard })
-      || speak(FIRST_CALL_INTRO_ES, { onEnd: callFirstCard });
-
-    if (!introStarted) {
-      callFirstCard();
+    publishAnalyticsContext({ intro_pending: true });
+    if (playClip(INTRO_AUDIO_KEY, { onEnd: callFirstCard })) {
+      trackEvent('intro_played', { via: 'clip' });
+      return;
     }
+    if (speak(FIRST_CALL_INTRO_ES, { onEnd: callFirstCard })) {
+      trackEvent('intro_played', { via: 'tts' });
+      return;
+    }
+    trackEvent('intro_skipped', { reason: 'unavailable' });
+    callFirstCard();
   }, [introPending, language, speak, playClip, hasClip]);
 
   // Auto-mode: pause-aware timer.
@@ -256,19 +318,45 @@ export function App() {
     [cancelPendingIntro, stopVoice, clearPendingSpeech]
   );
 
+  const gameFacts = useCallback(() => ({
+    cards_called: called.length,
+    elapsed_s: gameElapsed(),
+  }), [called.length, gameElapsed]);
+
+  const pauseFor = useCallback((reason: PauseReason) => {
+    if (!running) return;
+    publishAnalyticsContext({ game_running: false });
+    trackEvent('game_pause', { reason, ...gameFacts() });
+  }, [gameFacts, running]);
+
+  const cancelIntroFor = useCallback((reason: string) => {
+    if (introPending) trackEvent('intro_cancelled', { reason });
+    cancelPendingIntro();
+  }, [cancelPendingIntro, introPending]);
+
   // Handlers
   const handleRequestRestart = useCallback(() => {
     if (called.length === 0) return;
-    cancelPendingIntro();
+    restartWasRunningRef.current = running;
+    cancelIntroFor('restart');
+    pauseFor('restart');
     setRunning(false);
+    trackEvent('dialog_open', { dialog: 'restart', ...gameFacts() });
     setShowRestartConfirm(true);
-  }, [called.length, cancelPendingIntro]);
+  }, [called.length, cancelIntroFor, gameFacts, pauseFor, running]);
 
   const handleCancelRestart = useCallback(() => {
+    trackEvent('dialog_close', { dialog: 'restart', result: 'cancel' });
     setShowRestartConfirm(false);
   }, []);
 
   const handleConfirmRestart = useCallback(() => {
+    trackEvent('game_restart', {
+      ...gameFacts(),
+      was_running: restartWasRunningRef.current,
+    });
+    if (showHistory) trackEvent('sheet_close', { screen: 'history' });
+    if (showSettings) trackEvent('sheet_close', { screen: 'settings' });
     const now = performance.now();
     cancelPendingIntro();
     clearPendingSpeech();
@@ -276,6 +364,7 @@ export function App() {
     resetDeck();
     lastCallAtRef.current = 0;
     pausedAtRef.current = null;
+    gameStartedAtRef.current = null;
     hasCalledRef.current = false;
     hiddenAtRef.current = null;
     setTimerNowMs(now);
@@ -283,7 +372,7 @@ export function App() {
     setShowHistory(false);
     setShowSettings(false);
     setShowRestartConfirm(false);
-  }, [cancelPendingIntro, stopVoice, clearPendingSpeech, resetDeck]);
+  }, [cancelPendingIntro, stopVoice, clearPendingSpeech, gameFacts, resetDeck, showHistory, showSettings]);
 
   const handleTogglePlay = () => {
     if (introPending) return;
@@ -297,6 +386,8 @@ export function App() {
       startFirstCallSequence(true);
       return;
     }
+    publishAnalyticsContext({ game_running: !running });
+    trackEvent(running ? 'game_pause' : 'game_resume', { reason: 'button', ...gameFacts() });
     setRunning(r => !r);
   };
 
@@ -309,7 +400,7 @@ export function App() {
       return;
     }
     const now = performance.now();
-    if (!tick(now)) return;
+    if (!tick(now, 'manual')) return;
     // If we're paused, the just-drawn card resets the countdown — the pause
     // duration before this click shouldn't count toward the new card's timer.
     if (pausedAtRef.current !== null) {
@@ -318,25 +409,32 @@ export function App() {
   };
 
   const handleOpenHistory = () => {
-    cancelPendingIntro();
+    cancelIntroFor('history');
+    pauseFor('history');
     stopVoice();
     setRunning(false);
     setShowHistory(true);
+    trackEvent('sheet_open', { screen: 'history', from: 'board', ...gameFacts() });
   };
 
   const handleOpenSettings = () => {
-    cancelPendingIntro();
+    cancelIntroFor('settings');
+    pauseFor('settings');
     stopVoice();
     setRunning(false);
     setShowSettings(true);
+    trackEvent('sheet_open', { screen: 'settings', from: 'header', ...gameFacts() });
   };
 
-  const handleOpenAudio = () => {
-    cancelPendingIntro();
+  const handleOpenAudio = (from: 'header' | 'settings') => {
+    cancelIntroFor('audio');
+    pauseFor('audio');
     stopVoice();
     setRunning(false);
+    if (showSettings) trackEvent('sheet_close', { screen: 'settings' });
     setShowSettings(false);
     setShowAudio(true);
+    trackEvent('sheet_open', { screen: 'audio', from, ...gameFacts() });
   };
 
   // Preview with the system voice, for rows that have no clip of their own.
@@ -352,8 +450,15 @@ export function App() {
     [speak, buildText]
   );
 
+  const setTrackedTweak = <K extends keyof Tweaks>(key: K, value: Tweaks[K]) => {
+    if (tweaks[key] === value) return;
+    publishAnalyticsContext({ [TWEAK_CONTEXT_KEY[key]]: value });
+    setTweak(key, value);
+    trackEvent('setting_change', { setting: key, value });
+  };
+
   const handleToggleLanguage = () => {
-    setTweak('language', language === 'es' ? 'en' : 'es');
+    setTrackedTweak('language', language === 'es' ? 'en' : 'es');
   };
 
   // Derived: countdown + primary control mode
@@ -366,6 +471,61 @@ export function App() {
 
   const cardsWithClips = countCardClips(cardAudio.clips, LOTERIA_CARDS);
   const storedClipCount = Object.keys(cardAudio.clips).length;
+
+  useEffect(() => {
+    publishAppAnalytics({
+      tweaks,
+      tts: ttsSupported,
+      audioStorage: cardAudio.supported,
+      cardsCalled: called.length,
+      cardsRemaining: remaining,
+      gameRunning: running,
+      introPending,
+      clipCount: storedClipCount,
+      cardsWithAudio: cardsWithClips,
+      hasIntro: hasClip(INTRO_AUDIO_KEY),
+    });
+  }, [
+    called.length,
+    cardAudio.supported,
+    cardsWithClips,
+    hasClip,
+    introPending,
+    remaining,
+    running,
+    storedClipCount,
+    tweaks,
+    ttsSupported,
+  ]);
+
+  useEffect(() => {
+    if (!cardAudio.ready) return;
+    trackOnce('app_open', {
+      clip_count: storedClipCount,
+      cards_with_audio: cardsWithClips,
+      has_intro: hasClip(INTRO_AUDIO_KEY),
+    });
+  }, [cardAudio.ready, cardsWithClips, hasClip, storedClipCount]);
+
+  useEffect(() => {
+    if (canInstallPwa) trackOnce('pwa_install_available');
+  }, [canInstallPwa]);
+
+  useEffect(() => {
+    if (showIosInstallHint) trackOnce('pwa_ios_hint');
+  }, [showIosInstallHint]);
+
+  useEffect(() => {
+    if (canUpdatePwa) trackOnce('pwa_update_available');
+  }, [canUpdatePwa]);
+
+  const requestInstall = (source: 'banner' | 'settings') => {
+    trackEvent('pwa_install_prompt', { source });
+    return installPwa().then(outcome => {
+      trackEvent('pwa_install_result', { source, outcome });
+      return outcome;
+    });
+  };
 
   const primaryMode: 'call' | 'pause' | 'resume' | 'restart' =
     deck.length === 0 && called.length > 0
@@ -414,7 +574,7 @@ export function App() {
       <AppHeader
         language={language}
         onToggleLanguage={handleToggleLanguage}
-        onOpenAudio={handleOpenAudio}
+        onOpenAudio={() => handleOpenAudio('header')}
         onOpenSettings={handleOpenSettings}
         fonts={fonts}
         brandSub={t('El cantor', 'The Caller')}
@@ -431,7 +591,7 @@ export function App() {
         dismissLabel={t('Descartar aviso de instalación', 'Dismiss install notice')}
         canInstall={canInstallPwa}
         installing={installingPwa}
-        onInstall={installPwa}
+        onInstall={() => requestInstall('banner')}
       />
 
       <main className="app-main" aria-label={t('Cantor de Lotería', 'Lotería Caller')}>
@@ -501,12 +661,18 @@ export function App() {
 
       <HistorySheet
         open={showHistory}
-        onClose={() => setShowHistory(false)}
+        onClose={() => {
+          trackEvent('sheet_close', { screen: 'history' });
+          setShowHistory(false);
+        }}
         called={called}
         language={language}
         palette={palette}
         fonts={fonts}
-        onPillClick={card => speakCard(card)}
+        onPillClick={card => {
+          trackEvent('history_replay', { card: card.n, name: card.icon });
+          speakCard(card);
+        }}
         title={t('Historial', 'History')}
         closeLabel={t('Cerrar', 'Close')}
         emptyLabel={t('Aún no se ha cantado ninguna carta', 'No cards called yet')}
@@ -514,19 +680,25 @@ export function App() {
 
       <SettingsSheet
         open={showSettings}
-        onClose={() => setShowSettings(false)}
+        onClose={() => {
+          trackEvent('sheet_close', { screen: 'settings' });
+          setShowSettings(false);
+        }}
         tweaks={tweaks}
-        setTweak={setTweak}
+        setTweak={setTrackedTweak}
         onResetDeck={handleRequestRestart}
         canResetDeck={called.length > 0}
-        onOpenAudio={handleOpenAudio}
+        onOpenAudio={() => handleOpenAudio('settings')}
         canInstallPwa={canInstallPwa}
         installingPwa={installingPwa}
-        onInstallPwa={() => { void installPwa(); }}
+        onInstallPwa={() => { void requestInstall('settings'); }}
         showIosInstallHint={showIosInstallHint}
         canUpdatePwa={canUpdatePwa}
         updatingPwa={updatingPwa}
-        onUpdatePwa={() => { void updatePwa(); }}
+        onUpdatePwa={() => {
+          trackEvent('pwa_update');
+          void updatePwa();
+        }}
         palette={palette}
         fonts={fonts}
         ttsSupported={ttsSupported}
@@ -576,11 +748,14 @@ export function App() {
 
       <AudioSheet
         open={showAudio}
-        onClose={() => setShowAudio(false)}
+        onClose={() => {
+          trackEvent('sheet_close', { screen: 'audio' });
+          setShowAudio(false);
+        }}
         audio={cardAudio}
         language={language}
         useCustom={tweaks.customAudio}
-        onToggleUseCustom={value => setTweak('customAudio', value)}
+        onToggleUseCustom={value => setTrackedTweak('customAudio', value)}
         voiceOn={tweaks.voice && ttsSupported}
         onPreviewVoice={handlePreviewVoice}
         palette={palette}
